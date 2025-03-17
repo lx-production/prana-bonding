@@ -14,5 +14,5 @@ export default defineConfig({
       compressionOptions: { level: 9 }, // Maximum compression level
     })
   ],
-  base: '/stake/',
+  base: '/bond/',
 })

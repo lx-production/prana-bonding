@@ -19,7 +19,7 @@ export function startSpinningFavicon() {
     // Create an image element for your favicon.
     const img = new Image();
     img.crossOrigin = "anonymous"; // Ensures cross-origin images can be used if needed.
-    img.src = "/stake/src/assets/icons/prana.svg";
+    img.src = "/bond/src/assets/icons/prana.svg";
   
     img.onload = function () {
       let angle = 0;

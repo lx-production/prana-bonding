@@ -3,6 +3,7 @@ import { useAccount } from 'wagmi';
 import ConnectWallet from './components/ConnectWallet';
 import PranaBalance from './components/PranaBalance';
 import ThemeSwitcher from './components/ThemeSwitcher';
+import PoolInfo from './components/PoolInfo';
 
 function App() {
   const { isConnected } = useAccount();
@@ -23,8 +24,13 @@ function App() {
 
       <main>        
         {isConnected ? (
-          <div className="card">
-            <PranaBalance />
+          <div>
+            <div className="card">
+              <PranaBalance />
+            </div>
+            <div className="card">
+              <PoolInfo />
+            </div>
           </div>
         ) : (
           <div className="card">
