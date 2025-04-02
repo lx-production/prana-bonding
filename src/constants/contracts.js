@@ -1,8 +1,11 @@
-// This file contains the contract addresses and ABIs
-// Replace placeholder addresses with actual deployed contract addresses
+export const WBTC_ADDRESS = '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6';
 
 // PRANA Token contract (ERC20 with permit functionality)
 export const PRANA_TOKEN_ADDRESS = '0x928277e774F34272717EADFafC3fd802dAfBD0F5'; // Replace with actual token address
+
+// Token Decimals
+export const PRANA_DECIMALS = 9;
+export const WBTC_DECIMALS = 8;
 
 // Contract ABIs - Using standard JSON format instead of human-readable format
 export const PRANA_TOKEN_ABI = [
@@ -129,6 +132,154 @@ export const PRANA_TOKEN_ABI = [
       {"indexed": true, "name": "owner", "type": "address"},
       {"indexed": true, "name": "spender", "type": "address"},
       {"indexed": false, "name": "value", "type": "uint256"}
+    ]
+  }
+];
+
+// WBTC ABI (same as standard ERC20)
+export const WBTC_ABI = [
+  {
+    "name": "balanceOf",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [{"name": "owner", "type": "address"}],
+    "outputs": [{"type": "uint256"}]
+  },
+  {
+    "name": "allowance",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [
+      {"name": "owner", "type": "address"},
+      {"name": "spender", "type": "address"}
+    ],
+    "outputs": [{"type": "uint256"}]
+  },
+  {
+    "name": "approve",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {"name": "spender", "type": "address"},
+      {"name": "value", "type": "uint256"}
+    ],
+    "outputs": [{"type": "bool"}]
+  },
+  {
+    "name": "transfer",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {"name": "to", "type": "address"},
+      {"name": "value", "type": "uint256"}
+    ],
+    "outputs": [{"type": "bool"}]
+  }
+];
+
+// Bond Contract ABI
+export const BOND_CONTRACT_ABI = [
+  // View functions 
+  {
+    "name": "minPranaBuyAmount",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [{"type": "uint256"}]
+  },
+  // Write functions for buying bonds
+  {
+    "name": "buyBondWithWbtc",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {"name": "wbtcAmount", "type": "uint256"},
+      {"name": "termEnum", "type": "uint8"}
+    ],
+    "outputs": []
+  },
+  {
+    "name": "buyBondWithPrana",
+    "type": "function", 
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {"name": "pranaAmount", "type": "uint256"},
+      {"name": "termEnum", "type": "uint8"}
+    ],
+    "outputs": []
+  },
+  // User bond info
+  {
+    "name": "getUserBonds",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [{"name": "user", "type": "address"}],
+    "outputs": [{
+      "type": "tuple[]",
+      "components": [
+        {"name": "id", "type": "uint256"},
+        {"name": "wbtcAmount", "type": "uint256"},
+        {"name": "pranaAmount", "type": "uint256"},
+        {"name": "startTime", "type": "uint256"},
+        {"name": "endTime", "type": "uint256"},
+        {"name": "term", "type": "uint8"},
+        {"name": "claimed", "type": "bool"}
+      ]
+    }]
+  },
+  // Calculation functions (view functions needed for UI)
+  {
+    "name": "calculatePranaAmountForWbtc",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [
+      {"name": "wbtcAmount", "type": "uint256"},
+      {"name": "termEnum", "type": "uint8"}
+    ],
+    "outputs": [{"type": "uint256"}]
+  },
+  {
+    "name": "calculateWbtcAmountForPrana",
+    "type": "function",
+    "stateMutability": "view",
+    "inputs": [
+      {"name": "pranaAmount", "type": "uint256"},
+      {"name": "termEnum", "type": "uint8"}
+    ],
+    "outputs": [{"type": "uint256"}]
+  },
+  // Claim function
+  {
+    "name": "claimBond",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [{"name": "bondId", "type": "uint256"}],
+    "outputs": []
+  },
+  // Events
+  {
+    "name": "BondCreated",
+    "type": "event",
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "name": "user", "type": "address"},
+      {"indexed": true, "name": "bondId", "type": "uint256"},
+      {"indexed": false, "name": "wbtcAmount", "type": "uint256"},
+      {"indexed": false, "name": "pranaAmount", "type": "uint256"},
+      {"indexed": false, "name": "term", "type": "uint8"},
+      {"indexed": false, "name": "startTime", "type": "uint256"},
+      {"indexed": false, "name": "endTime", "type": "uint256"}
+    ]
+  },
+  {
+    "name": "BondClaimed",
+    "type": "event",
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "name": "user", "type": "address"},
+      {"indexed": true, "name": "bondId", "type": "uint256"},
+      {"indexed": false, "name": "pranaAmount", "type": "uint256"},
+      {"indexed": false, "name": "claimTime", "type": "uint256"}
     ]
   }
 ];
@@ -392,3 +543,5 @@ export const V3_POOL_SLOT0_ABI = [
     "type": "function"
   }
 ];
+
+export const BOND_CONTRACT_ADDRESS = '0xD767bd8859c6d34638C816bA60Fc9F4089A2E16B';
