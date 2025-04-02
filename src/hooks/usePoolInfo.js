@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPublicClient, http, getContract } from 'viem';
 import { polygon } from 'viem/chains';
+import { WBTC_PRANA_V3_POOL, V3_POOL_SLOT0_ABI } from '../constants/contracts';
 
 /**
  * Custom hook to fetch WBTC/PRANA pool price information
@@ -20,21 +21,17 @@ export function usePoolInfo() {
         const client = createPublicClient({
           chain: polygon,
           transport: http()
-        });
+        });        
 
-        const poolId = '0x55f29aa6c65f8a762795b3643432daa984d752b36610b1ca485796d5714e1e15';
-        
-        const stateViewABI = [{"inputs":[{"internalType":"PoolId","name":"poolId","type":"bytes32"}],"name":"getSlot0","outputs":[{"internalType":"uint160","name":"sqrtPriceX96","type":"uint160"},{"internalType":"int24","name":"tick","type":"int24"},{"internalType":"uint24","name":"protocolFee","type":"uint24"},{"internalType":"uint24","name":"lpFee","type":"uint24"}],"stateMutability":"view","type":"function"}];
-
-        // Set up StateView contract instance
-        const stateView = getContract({
-          address: '0x5ea1bd7974c8a611cbab0bdcafcb1d9cc9b3ba5a',
-          abi: stateViewABI,
+        // Set up V3 Pool contract instance using address and ABI from constants
+        const poolContract = getContract({
+          address: WBTC_PRANA_V3_POOL, // Use V3 pool address
+          abi: V3_POOL_SLOT0_ABI,     // Use standard V3 slot0 ABI
           client
         });
         
-        // Make the contract call and get the response
-        const response = await stateView.read.getSlot0([poolId]);
+        // Make the contract call to slot0 (no arguments needed)
+        const response = await poolContract.read.slot0(); // Call slot0 instead of getSlot0
         
         const sqrtPriceX96 = response[0];
         let wbtcPerPrana = 'Not available';
@@ -45,6 +42,7 @@ export function usePoolInfo() {
             const WBTC_DECIMALS = 8;
             const PRANA_DECIMALS = 9;
             
+            // Calculation logic remains the same as it only depends on sqrtPriceX96
             const sqrtPriceDecimal = Number(sqrtPriceX96) / (2n ** 96n).toString();
             const rawPrice = sqrtPriceDecimal * sqrtPriceDecimal;
             const decimalAdjustment = Math.pow(10, WBTC_DECIMALS - PRANA_DECIMALS);
