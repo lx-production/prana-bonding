@@ -3,7 +3,6 @@ import useBonding from '../hooks/useBonding';
 import { BOND_TERM_OPTIONS } from '../constants/bondingTerms'; // Import options
 // Giả sử bạn có hoặc điều chỉnh DurationSlider cho phù hợp với Bond Terms
 import DurationSlider from './DurationSlider';
-import { PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/contracts';
 
 const BondingForm = () => {
     const {
@@ -16,12 +15,11 @@ const BondingForm = () => {
         setPranaAmount,
         termIndex,
         setTermIndex,
-        bondRates, // Sẽ dùng để hiển thị discount trên slider
+        bondRates,
         error,
         success,
         isLoading,
         writeStatus,
-        isConfirming,
         handleApprove,
         handleBuyBond,
         wbtcBalance,
@@ -145,7 +143,7 @@ const BondingForm = () => {
                     onClick={handleBuyBond}
                     disabled={isBuyDisabled}
                  >
-                    {isLoading && (writeStatus === 'pending' || isConfirming) ? ( // Spinner khi đang gửi tx hoặc chờ xác nhận
+                    {isLoading && (writeStatus === 'pending') ? ( // Spinner khi đang gửi tx hoặc chờ xác nhận
                         <><span className="spinner">↻</span>Đang mua Bond...</>
                     ) : (
                         'Mua Bond'
