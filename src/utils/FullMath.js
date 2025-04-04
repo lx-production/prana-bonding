@@ -43,30 +43,5 @@ export const FullMath = {
 
     // Phép chia độ chính xác cao
     return product / denominatorBn;
-  },
-
-  /**
-   * Tính ceil(a×b÷denominator) với độ chính xác đầy đủ
-   * Ném lỗi nếu kết quả tràn uint256 hoặc denominator = 0
-   * @param {bigint|number|string} a Số bị nhân
-   * @param {bigint|number|string} b Số nhân
-   * @param {bigint|number|string} denominator Số chia
-   * @returns {bigint} Kết quả 256-bit làm tròn lên
-   */
-  mulDivRoundingUp: (a, b, denominator) => {
-    // Chuyển đổi đầu vào thành BigInt
-    const aBn = BigInt(a);
-    const bBn = BigInt(b);
-    const denominatorBn = BigInt(denominator);
-    
-    // Thực hiện mulDiv
-    let result = FullMath.mulDiv(aBn, bBn, denominatorBn);
-    
-    // Kiểm tra nếu có phần dư, làm tròn lên
-    if ((aBn * bBn) % denominatorBn > 0n) {
-      result = result + 1n;
-    }
-    
-    return result;
   }
 };

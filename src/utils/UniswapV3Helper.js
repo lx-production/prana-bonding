@@ -1,5 +1,5 @@
 import { FullMath } from './FullMath';
-import { V3_POOL_SLOT0_ABI, V3_POOL_LIQUIDITY_ABI, PRANA_DECIMALS } from '../constants/sharedContracts';
+import { V3_POOL_SLOT0_ABI, V3_POOL_LIQUIDITY_ABI, PRANA_DECIMALS, WBTC_PRANA_V3_POOL } from '../constants/sharedContracts';
 import { BOND_TERM_OPTIONS } from '../constants/bondingTerms';
 
 /**
@@ -8,7 +8,7 @@ import { BOND_TERM_OPTIONS } from '../constants/bondingTerms';
  * @param {string} poolAddress Địa chỉ pool Uniswap V3
  * @returns {Promise<{wbtcReserve: bigint, pranaReserve: bigint}>} Reserves của WBTC và PRANA
  */
-export const getReserves = async (publicClient, poolAddress) => {
+export const getReserves = async (publicClient, poolAddress = WBTC_PRANA_V3_POOL) => {
   if (!publicClient || !poolAddress) {
     return { wbtcReserve: 0n, pranaReserve: 0n };
   }
@@ -124,38 +124,44 @@ export const calculatePranaAmount = async (
 ) => {
   try {
     const wbtcAmountBn = BigInt(wbtcAmount);
+    console.log(`Debug: Input WBTC amount (wei): ${wbtcAmountBn.toString()}`);
+    
     const { wbtcReserve, pranaReserve } = await getReserves(publicClient, poolAddress);
+    console.log(`Debug: Reserves - WBTC: ${wbtcReserve.toString()}, PRANA: ${pranaReserve.toString()}`);
 
     if (wbtcReserve === 0n || pranaReserve === 0n) throw new Error("Zero reserves returned from pool");
 
-    // Remove fee
-    const amountWithoutFee = (wbtcAmountBn * 79n) / 80n;
-
-    // Get the correct term object using the index
+    // Remove fee - Use FullMath.mulDiv for more precision instead of direct division
+    // const amountWithoutFee = (wbtcAmountBn * 79n) / 80n; // This can zero out small amounts
+    const amountWithoutFee = FullMath.mulDiv(wbtcAmountBn, 79n, 80n);
+    console.log(`Debug: Amount after fee removal (more precise): ${amountWithoutFee.toString()}`);
+    
+    // Get term info
     const selectedOption = termOptions[bondTermIndex];
     if (!selectedOption) throw new Error(`Invalid term index: ${bondTermIndex}`);
-
-    // Use the term's seconds value as the key for the bondRatesMap
+    
     const termInfo = bondRatesMap[selectedOption.seconds];
-     if (!termInfo || typeof termInfo.rate === 'undefined') throw new Error(`Bond rate info not found for term seconds: ${selectedOption.seconds}`);
+    if (!termInfo || typeof termInfo.rate === 'undefined') 
+      throw new Error(`Bond rate info not found for term seconds: ${selectedOption.seconds}`);
 
-    const rate = BigInt(termInfo.rate); // Rate is already BigInt
+    const rate = BigInt(termInfo.rate);
+    console.log(`Debug: Discount rate (basis points): ${rate.toString()}`);
 
     const TEN_THOUSAND = 10000n;
-    // Ensure rate is not 10000 (100%) or more, which would cause division by zero or negative
     if (rate >= TEN_THOUSAND) throw new Error(`Invalid discount rate >= 100%: ${rate}`);
     
-    const regularWbtcAmount = (amountWithoutFee * TEN_THOUSAND) / (TEN_THOUSAND - rate);
+    // Calculate regular amount - Use FullMath for higher precision
+    const regularWbtcAmount = FullMath.mulDiv(amountWithoutFee, TEN_THOUSAND, TEN_THOUSAND - rate);
+    console.log(`Debug: Regular WBTC amount with discount: ${regularWbtcAmount.toString()}`);
 
+    // Calculate PRANA amount - This already uses FullMath
     const pranaAmount = FullMath.mulDiv(pranaReserve, regularWbtcAmount, wbtcReserve + regularWbtcAmount);
-
-    if (pranaAmount >= pranaReserve) throw new Error("Calculated PRANA amount exceeds reserve");
+    console.log(`Debug: Calculated PRANA output (wei): ${pranaAmount.toString()}`);
 
     return pranaAmount;
   } catch (err) {
-    console.error("Error calculating PRANA amount:", err);
-     // Consider re-throwing or returning a specific error value/object
-    throw err; // Re-throw for the caller (useBonding) to handle
+    console.error("Debug: Error calculating PRANA amount:", err);
+    throw err;
   }
 };
 

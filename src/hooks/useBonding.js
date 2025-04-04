@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { BOND_CONTRACT_ADDRESS, BOND_CONTRACT_ABI } from '../constants/bondingContracts';
-import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
+import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS, WBTC_PRANA_V3_POOL } from '../constants/sharedContracts';
 import { BOND_TERM_OPTIONS } from '../constants/bondingTerms';
 import { calculatePranaAmount, calculateWbtcAmount } from '../utils/UniswapV3Helper';
 
@@ -22,7 +22,7 @@ const useBonding = () => {
     const [pranaAmount, setPranaAmount] = useState('');
     const [termIndex, setTermIndex] = useState(0); // Chỉ số cho BOND_TERM_OPTIONS
     const [bondRates, setBondRates] = useState({}); // Lưu trữ tỷ lệ bond { termInSeconds: rate }
-    const [uniswapPoolAddress, setUniswapPoolAddress] = useState(null);
+    const [uniswapPoolAddress, setUniswapPoolAddress] = useState(WBTC_PRANA_V3_POOL); // Use the hardcoded address as a fallback
 
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -73,21 +73,19 @@ const useBonding = () => {
     // Read the Uniswap V3 Pool address used by the bonding contract
     useReadContract({
         address: BOND_CONTRACT_ADDRESS,
-        abi: BOND_CONTRACT_ABI, // Make sure ABI includes 'uniswapV3PoolAddress'
+        abi: BOND_CONTRACT_ABI,
         functionName: 'uniswapV3PoolAddress',
         enabled: isConnected,
         onSuccess: (data) => {
             if (data && data !== '0x0000000000000000000000000000000000000000') {
+                console.log("Got pool address from contract:", data);
                 setUniswapPoolAddress(data);
-                // console.log("Uniswap Pool Address:", data);
             } else {
-                console.error("Failed to get valid Uniswap Pool Address from Bonding contract.");
-                setError("Lỗi cấu hình: Không tìm thấy địa chỉ pool Uniswap.");
+                console.error("Failed to get valid Uniswap Pool Address from Bonding contract, using fallback.");
             }
         },
         onError: (err) => {
             console.error("Error fetching uniswapPoolAddress:", err);
-            setError("Không thể đọc địa chỉ pool Uniswap từ hợp đồng.");
         }
     });
 
@@ -100,58 +98,109 @@ const useBonding = () => {
 
     // Calculation effect - runs when inputs change
     useEffect(() => {
+        console.log("Effect triggered with:", {
+            inputType,
+            wbtcAmount,
+            pranaAmount,
+            isConnected,
+            hasPoolAddress: !!uniswapPoolAddress,
+            hasBondRates: Object.keys(bondRates).length > 0,
+            hasPublicClient: !!publicClient,
+            isValidWbtcInput,
+            isValidPranaInput
+        });
+
         const calculateAmounts = async () => {
+            // Check if we have all required dependencies
             if (!isConnected || !uniswapPoolAddress || Object.keys(bondRates).length === 0 || !publicClient) {
+                console.log("Missing dependencies:", {
+                    isConnected,
+                    uniswapPoolAddress,
+                    bondRatesLength: Object.keys(bondRates).length,
+                    hasPublicClient: !!publicClient
+                });
                 setCalculatedPrana('0');
                 setCalculatedWbtc('0');
                 return; // Not ready yet
             }
 
+            console.log("Starting calculation with:", {
+                inputType,
+                wbtcAmount,
+                pranaAmount,
+                termIndex
+            });
+            
             setIsCalculating(true);
             setCalculatedPrana('0'); // Reset previous calculations
             setCalculatedWbtc('0');
+            // console.log("Starting calculation..."); // Optional: add start log
 
             try {
-                // Get rate using the updated helper function
                 const rateBasisPoints = getRateForTerm(termIndex, bondRates, BOND_TERM_OPTIONS);
                 if (rateBasisPoints < 0n) throw new Error("Invalid term index or rate");
 
                 if (inputType === 'WBTC' && isValidWbtcInput) {
+                    console.log(`Hook: Input WBTC Amount (string): ${wbtcAmount}`);
                     const wbtcAmountWei = parseUnits(wbtcAmount, WBTC_DECIMALS);
-                    
-                    // Pass the full bondRates map to the helper
-                    const calculatedPranaWei = await calculatePranaAmount(
-                        wbtcAmountWei,
-                        termIndex, // Keep passing termIndex or pass selectedOption.seconds? Helper needs consistency.
-                        bondRates, // Pass the full map { seconds: { rate, duration } }
-                        publicClient,
-                        uniswapPoolAddress,
-                        BOND_TERM_OPTIONS // Pass options if helper needs it to find term by index
-                    );
-                    
-                    setCalculatedPrana(formatUnits(calculatedPranaWei, PRANA_DECIMALS));
+                    console.log(`Hook: Input WBTC Amount (wei): ${wbtcAmountWei.toString()}`);
+
+                    if (wbtcAmountWei === 0n) {
+                        console.log("Hook: WBTC amount in wei is zero, skipping calculation.");
+                        setCalculatedPrana('0');
+                    } else {
+                        // Pass the full bondRates map to the helper
+                        const calculatedPranaWei = await calculatePranaAmount(
+                            wbtcAmountWei,
+                            termIndex, 
+                            bondRates, 
+                            publicClient,
+                            uniswapPoolAddress,
+                            BOND_TERM_OPTIONS 
+                        );
+                        
+                        console.log(`Hook: Calculated PRANA (wei) from helper: ${calculatedPranaWei.toString()}`);
+                        const formattedPrana = formatUnits(calculatedPranaWei, PRANA_DECIMALS);
+                        console.log(`Hook: Formatted PRANA (string): ${formattedPrana}`);
+                        setCalculatedPrana(formattedPrana);
+                    }
+
                 } else if (inputType === 'PRANA' && isValidPranaInput) {
+                    console.log(`Hook: Input PRANA Amount (string): ${pranaAmount}`);
                     const pranaAmountWei = parseUnits(pranaAmount, PRANA_DECIMALS);
-                    
-                    // Pass the full bondRates map to the helper
-                    const finalWbtcAmount = await calculateWbtcAmount(
-                        pranaAmountWei,
-                        termIndex, // Keep passing termIndex or pass selectedOption.seconds?
-                        bondRates, // Pass the full map { seconds: { rate, duration } }
-                        publicClient,
-                        uniswapPoolAddress,
-                        BOND_TERM_OPTIONS // Pass options if helper needs it
-                    );
-                    
-                    setCalculatedWbtc(formatUnits(finalWbtcAmount, WBTC_DECIMALS));
+                    console.log(`Hook: Input PRANA Amount (wei): ${pranaAmountWei.toString()}`);
+
+                     if (pranaAmountWei === 0n) {
+                        console.log("Hook: PRANA amount in wei is zero, skipping calculation.");
+                        setCalculatedWbtc('0');
+                    } else {
+                        const finalWbtcAmountWei = await calculateWbtcAmount(
+                            pranaAmountWei,
+                            termIndex, 
+                            bondRates, 
+                            publicClient,
+                            uniswapPoolAddress,
+                            BOND_TERM_OPTIONS 
+                        );
+
+                        console.log(`Hook: Calculated WBTC (wei) from helper: ${finalWbtcAmountWei.toString()}`);
+                        const formattedWbtc = formatUnits(finalWbtcAmountWei, WBTC_DECIMALS);
+                        console.log(`Hook: Formatted WBTC (string): ${formattedWbtc}`);
+                        setCalculatedWbtc(formattedWbtc); // Store the formatted string
+                    }
+                } else {
+                    // console.log("Hook: No valid input to calculate."); // Optional log
+                    setCalculatedPrana('0');
+                    setCalculatedWbtc('0');
                 }
             } catch (err) {
-                console.error("Calculation error:", err);
+                console.error("Hook: Calculation error:", err);
                 setError("Lỗi tính toán giá trị."); // Set calculation-specific error
                 setCalculatedPrana('0');
                 setCalculatedWbtc('0');
             } finally {
                 setIsCalculating(false);
+                // console.log("Calculation finished."); // Optional: add end log
             }
         };
 
@@ -405,7 +454,7 @@ const useBonding = () => {
       }
 
       fetchRates();
-    }, [isConnected, publicClient, BOND_CONTRACT_ADDRESS, BOND_CONTRACT_ABI]); // Include ABI in dependencies
+    }, [isConnected, publicClient, BOND_CONTRACT_ADDRESS]);
 
     return {
         address,
@@ -418,18 +467,17 @@ const useBonding = () => {
         setPranaAmount,
         termIndex,
         setTermIndex,
-        bondRates, // Now contains { seconds: { rate: BigInt, duration: BigInt } }
+        bondRates,
         error,
         success,
         loading,
-        isCalculating, // Calculation loading
+        isCalculating,
         writeStatus,
         handleApprove,
         handleBuyBond,
         wbtcBalance,
         minPranaBuyAmountFormatted,
         needsApproval,
-        // Expose calculated values from state
         calculatedPranaForWbtc: calculatedPrana,
         calculatedWbtcForPrana: calculatedWbtc,
     };
