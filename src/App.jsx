@@ -4,6 +4,7 @@ import ConnectWallet from './components/ConnectWallet';
 import PranaBalance from './components/PranaBalance';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import PoolInfo from './components/PoolInfo';
+import BondingForm from './components/BondingForm';
 
 function App() {
   const { isConnected } = useAccount();
@@ -30,6 +31,9 @@ function App() {
             </div>
             <div className="card">
               <PoolInfo />
+            </div>
+            <div className="card">
+              <BondingForm />
             </div>
           </div>
         ) : (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPublicClient, http, getContract } from 'viem';
 import { polygon } from 'viem/chains';
-import { WBTC_PRANA_V3_POOL, V3_POOL_SLOT0_ABI } from '../constants/contracts';
+import { WBTC_PRANA_V3_POOL, V3_POOL_SLOT0_ABI } from '../constants/sharedContracts';
 
 /**
  * Custom hook to fetch WBTC/PRANA pool price information

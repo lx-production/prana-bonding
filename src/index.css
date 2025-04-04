@@ -687,6 +687,12 @@ button {
   box-shadow: var(--input-focus-shadow);
 }
 
+.info-notes {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
 /* Footer styles */
 .footer {
   font-size: 11px;

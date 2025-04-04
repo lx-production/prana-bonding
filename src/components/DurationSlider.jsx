@@ -49,8 +49,21 @@ const DurationSlider = ({
           valueLabelDisplay="on"
           valueLabelFormat={(value) => {
             const option = options[value];
-            const displayValue = valueMap[option.seconds];
-            return displayValue !== undefined ? `${displayValue}${valueLabelSuffix}` : '';
+            if (!option) return ''; // Handle case where option might not exist yet
+
+            // Look up the term info object using seconds as the key
+            const termInfo = valueMap[option.seconds];
+
+            // Check if termInfo and its rate property exist
+            if (termInfo && typeof termInfo.rate !== 'undefined') {
+              // Convert basis points (BigInt) to percentage (Number)
+              const percentage = Number(termInfo.rate) / 100;
+              // Format to 2 decimal places, adjust as needed
+              return `${percentage.toFixed(2)}${valueLabelSuffix}`;
+            }
+            
+            // Return empty string or a placeholder if data isn't ready
+            return '...'; 
           }}
           disabled={disabled}
           sx={{

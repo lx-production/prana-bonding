@@ -1,4 +1,4 @@
-export const BOND_CONTRACT_ADDRESS = '0xD767bd8859c6d34638C816bA60Fc9F4089A2E16B';
+export const BOND_CONTRACT_ADDRESS = '0x2e5299925cF81b540355c176b0D43E6FAF20e753';
 
 // Bond Contract ABI - Updated based on BuyPranaBond.json for UI needs
 export const BOND_CONTRACT_ABI = [
@@ -33,21 +33,9 @@ export const BOND_CONTRACT_ABI = [
       "inputs": [],
       "name": "getAllBondRates",
       "outputs": [
-        {
-          "internalType": "enum BuyPranaBond.BondTerm[]",
-          "name": "terms", // Adjusted name for clarity, was ""
-          "type": "uint8[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "rates", // Adjusted name for clarity, was ""
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "durations", // Adjusted name for clarity, was ""
-          "type": "uint256[]"
-        }
+        { "internalType": "enum BuyPranaBond.BondTerm[]", "name": "", "type": "uint8[]" },
+        { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
+        { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
       ],
       "stateMutability": "view",
       "type": "function"

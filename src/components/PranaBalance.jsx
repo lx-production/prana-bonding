@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { PRANA_TOKEN_ADDRESS, PRANA_TOKEN_ABI } from '../constants/contracts';
+import { PRANA_TOKEN_ADDRESS, PRANA_TOKEN_ABI } from '../constants/sharedContracts';
 
 const PranaBalance = () => {
   const { address, isConnected } = useAccount();
