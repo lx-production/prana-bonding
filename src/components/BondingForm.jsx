@@ -106,14 +106,12 @@ const BondingForm = () => {
 
             <div className="form-group">
                  <div id="term-label" className="form-label">Chọn kỳ hạn Bond</div>
-                {/* TODO: Điều chỉnh DurationSlider hoặc tạo BondTermSlider */}
-                {/* Cần truyền `bondRates` vào slider để hiển thị tỷ lệ % */}
                  <DurationSlider
-                    // Giả sử slider có thể nhận options và rates khác nhau
-                    durationIndex={termIndex}
-                    setDurationIndex={setTermIndex}
-                    durationOptions={BOND_TERM_OPTIONS} // Sử dụng options cho bond
-                    aprs={bondRates} // Truyền rates để slider hiển thị (cần điều chỉnh tên prop nếu cần)
+                    selectedIndex={termIndex}
+                    setSelectedIndex={setTermIndex}
+                    options={BOND_TERM_OPTIONS}
+                    valueMap={bondRates}
+                    valueLabelSuffix="% Chiết khấu"
                     disabled={isLoading}
                     labelId="term-label"
                  />

@@ -16,13 +16,14 @@ const createMuiTheme = (mode) => {
   });
 };
 
-const DurationSlider = ({ 
-  durationIndex, 
-  setDurationIndex, 
-  durationOptions, 
-  aprs, 
+const DurationSlider = ({
+  selectedIndex,
+  setSelectedIndex,
+  options,
+  valueMap,
+  valueLabelSuffix = '% APR',
   disabled,
-  labelId 
+  labelId
 }) => {
   // Get current theme from our ThemeContext
   const { theme } = useTheme();
@@ -35,20 +36,21 @@ const DurationSlider = ({
       <Box sx={{ width: '100%', padding: '20px 10px' }}>
         <Slider
           aria-labelledby={labelId}
-          aria-label="Staking Duration"
-          value={durationIndex}
-          onChange={(_, newValue) => setDurationIndex(Number(newValue))}
+          aria-label="Select Option"
+          value={selectedIndex}
+          onChange={(_, newValue) => setSelectedIndex(Number(newValue))}
           step={null}
-          marks={durationOptions.map((option, index) => ({
+          marks={options.map((option, index) => ({
             value: index,
-            label: `${option.days} ngày`
+            label: option.label
           }))}
           min={0}
-          max={durationOptions.length - 1}
+          max={options.length - 1}
           valueLabelDisplay="on"
           valueLabelFormat={(value) => {
-            const option = durationOptions[value];
-            return aprs[option.seconds] !== undefined ? `${aprs[option.seconds]}% APR` : '';
+            const option = options[value];
+            const displayValue = valueMap[option.seconds];
+            return displayValue !== undefined ? `${displayValue}${valueLabelSuffix}` : '';
           }}
           disabled={disabled}
           sx={{

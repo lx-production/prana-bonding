@@ -1,16 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
-import { BOND_CONTRACT_ADDRESS, BOND_CONTRACT_ABI, WBTC_ADDRESS, WBTC_ABI, PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/stakingContracts';
+import { BOND_CONTRACT_ADDRESS, BOND_CONTRACT_ABI } from '../constants/bondingContracts';
+import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
 import { BOND_TERM_OPTIONS } from '../constants/bondingTerms';
-import { FullMath } from '../utils/FullMath';
-import { getReserves } from '../utils/UniswapV3Helper';
-
-// --- Constants for calculation ---
-const TEN_THOUSAND = 10000n;
-// Fee adjustment factor from contract: (x * 80) / 79 for adding fee, (x * 79) / 80 for removing fee
-const FEE_MULTIPLIER = 80n;
-const FEE_DIVISOR = 79n;
+import { calculatePranaAmount, calculateWbtcAmount } from '../utils/UniswapV3Helper';
 
 // Helper function to get rate (in basis points) from termIndex
 const getRateForTerm = (termIndex, bondRatesMap, termOptions) => {
@@ -19,35 +13,6 @@ const getRateForTerm = (termIndex, bondRatesMap, termOptions) => {
     const rateInfo = bondRatesMap[selectedOption.seconds];
     // Ensure rate is treated as BigInt
     return rateInfo ? BigInt(rateInfo.rate) : 0n;
-};
-
-// Placeholder for Uniswap V3 price fetching logic
-// Replace this with actual price fetching using sqrtPriceX96 from the pool or Quoter contract
-const getEstimatedWbtcPerPrana = async (publicClient, poolAddress) => {
-    if (!publicClient || !poolAddress) return 0n;
-    
-    try {
-        // Get reserves from the pool
-        const { wbtcReserve, pranaReserve } = await getReserves(publicClient, poolAddress);
-        
-        if (wbtcReserve === 0n || pranaReserve === 0n) {
-            throw new Error("Zero reserves returned from pool");
-        }
-
-        // Calculate price of 1 PRANA in terms of WBTC
-        // Adjust for decimal places: (WBTC/PRANA) * 10^PRANA_DECIMALS for precision
-        // We do this because WBTC has 8 decimals while PRANA has 9 decimals
-        const price = FullMath.mulDiv(
-            wbtcReserve * (10n ** BigInt(PRANA_DECIMALS)), 
-            1n, 
-            pranaReserve
-        );
-        
-        return price;
-    } catch (err) {
-        console.error("Failed to fetch price from Uniswap V3 pool:", err);
-        return 0n;
-    }
 };
 
 const useBonding = () => {
@@ -147,52 +112,45 @@ const useBonding = () => {
             setCalculatedWbtc('0');
 
             try {
-                 // Get the current estimated price (replace with actual V3 price logic)
-                 const wbtcPerPranaPrice = await getEstimatedWbtcPerPrana(publicClient, uniswapPoolAddress);
-                 if (wbtcPerPranaPrice === 0n) throw new Error("Could not get valid price");
-
-                 const rate = getRateForTerm(termIndex, bondRates, BOND_TERM_OPTIONS);
-                 if (rate < 0n) throw new Error("Invalid term index or rate"); // Should be >= 0
-
-                 if (inputType === 'WBTC' && isValidWbtcInput) {
+                // Lấy rate cho term đã chọn
+                const rate = getRateForTerm(termIndex, bondRates, BOND_TERM_OPTIONS);
+                if (rate < 0n) throw new Error("Invalid term index or rate"); // Should be >= 0
+    
+                if (inputType === 'WBTC' && isValidWbtcInput) {
                     const wbtcAmountWei = parseUnits(wbtcAmount, WBTC_DECIMALS);
-
-                    // Formula from contract _calculatePranaAmount:
-                    // 1. Remove 1.25% fee
-                    const amountWithoutFee = (wbtcAmountWei * FEE_DIVISOR) / FEE_MULTIPLIER;
-                    // 2. Apply discount inverse
-                    const denominator = TEN_THOUSAND - rate;
-                    if (denominator <= 0n) throw new Error("Invalid rate for calculation");
-                    const regularWbtcAmount = (amountWithoutFee * TEN_THOUSAND) / denominator;
-                    // 3. Calculate PRANA from regularWbtcAmount using price
-                    // pranaAmount = regularWbtcAmount / price (WBTC per PRANA)
-                    // Need BigInt math carefully scaling price
-                    const calculatedPranaWei = (regularWbtcAmount * (10n ** BigInt(PRANA_DECIMALS))) / wbtcPerPranaPrice;
-
+                    
+                    // Sử dụng calculatePranaAmount từ UniswapV3Helper
+                    const calculatedPranaWei = await calculatePranaAmount(
+                        wbtcAmountWei,
+                        termIndex,
+                        bondRates,
+                        publicClient,
+                        uniswapPoolAddress
+                    );
+                    
                     setCalculatedPrana(formatUnits(calculatedPranaWei, PRANA_DECIMALS));
-
-                 } else if (inputType === 'PRANA' && isValidPranaInput) {
-                     const pranaAmountWei = parseUnits(pranaAmount, PRANA_DECIMALS);
-
-                     // Formula from contract _calculateWbtcAmount:
-                     // 1. Calculate regular WBTC amount using price
-                     // regularWbtcAmount = pranaAmount * price (WBTC per PRANA)
-                     const regularWbtcAmount = (pranaAmountWei * wbtcPerPranaPrice) / (10n ** BigInt(PRANA_DECIMALS));
-                     // 2. Apply discount
-                     const discountedRegularAmount = (regularWbtcAmount * (TEN_THOUSAND - rate)) / TEN_THOUSAND;
-                     // 3. Apply 1.25% fee
-                     const finalWbtcAmount = (discountedRegularAmount * FEE_MULTIPLIER) / FEE_DIVISOR;
-
-                     setCalculatedWbtc(formatUnits(finalWbtcAmount, WBTC_DECIMALS));
-                 }
+                } else if (inputType === 'PRANA' && isValidPranaInput) {
+                    const pranaAmountWei = parseUnits(pranaAmount, PRANA_DECIMALS);
+                    
+                    // Sử dụng calculateWbtcAmount từ UniswapV3Helper
+                    const finalWbtcAmount = await calculateWbtcAmount(
+                        pranaAmountWei,
+                        termIndex,
+                        bondRates,
+                        publicClient,
+                        uniswapPoolAddress
+                    );
+                    
+                    setCalculatedWbtc(formatUnits(finalWbtcAmount, WBTC_DECIMALS));
+                }
             } catch (err) {
-                 console.error("Calculation error:", err);
-                 // Optionally set an error state specific to calculation
-                 // setError("Lỗi tính toán giá trị.");
-                 setCalculatedPrana('0');
-                 setCalculatedWbtc('0');
+                console.error("Calculation error:", err);
+                // Optionally set an error state specific to calculation
+                // setError("Lỗi tính toán giá trị.");
+                setCalculatedPrana('0');
+                setCalculatedWbtc('0');
             } finally {
-                 setIsCalculating(false);
+                setIsCalculating(false);
             }
         };
 
@@ -247,7 +205,7 @@ const useBonding = () => {
                 functionName: 'approve',
                 args: [BOND_CONTRACT_ADDRESS, amountToApprove],
             });
-            setSuccess(`Phê duyệt thành công! Transaction: ${hash}. Vui lòng đợi xác nhận và cập nhật allowance.`);
+            setSuccess(`Phê duyệt thành công! Transaction: ${hash}. Vui lòng đợi giao dịch xác nhận.`);
             // Không reset form ở đây, chỉ thông báo
             // refetchAllowance sẽ tự động cập nhật khi watch=true hoặc có thể gọi thủ công nếu cần
             refetchAllowance(); // Chủ động gọi lại fetch allowance
@@ -390,46 +348,35 @@ const useBonding = () => {
         if (!isConnected || !publicClient) return;
         
         try {
-          // Khởi tạo object lưu trữ tỷ lệ bond
-          let ratesMap = {};
+          // Khởi tạo object lưu trữ tỷ lệ bond (chỉ phần trăm chiết khấu)
+          let ratesDiscountMap = {}; // Changed variable name for clarity
           
-          // Nếu contract có hàm getAllBondRates() trả về [termEnums, rateValues, durationValues]
           const result = await publicClient.readContract({
             address: BOND_CONTRACT_ADDRESS,
             abi: BOND_CONTRACT_ABI,
             functionName: 'getAllBondRates'
           });
           
-          // Phân tích kết quả
-          const [termEnums, rateValues, durationValues] = result;
+          const [termEnums, rateValues] = result;
           
-          // Xử lý kết quả
           for (let i = 0; i < termEnums.length; i++) {
-            const termEnum = Number(termEnums[i]); // Chuyển uint8 thành number
-            // Tìm term option tương ứng trong constants
+            const termEnum = Number(termEnums[i]);
             const termOption = BOND_TERM_OPTIONS.find(term => term.id === termEnum); 
             if (termOption) {
-              // Lưu vào map với key là seconds
-              ratesMap[termOption.seconds] = {
-                rate: Number(rateValues[i]), // Chuyển bigint/string thành number
-                duration: Number(durationValues[i]), // Chuyển bigint/string thành number
-                discountPercent: Number(rateValues[i]) / 100, // Tính phần trăm chiết khấu
-                // basisPoints: Number(rateValues[i]) // Có thể thêm nếu cần
-              };
+              // Chỉ lưu trữ phần trăm chiết khấu với key là seconds
+              ratesDiscountMap[termOption.seconds] = Number(rateValues[i]) / 100; 
             }
           }
           
-          console.log('Fetched bond rates:', ratesMap);
-          setBondRates(ratesMap);
+          console.log('Fetched bond discount rates:', ratesDiscountMap);
+          setBondRates(ratesDiscountMap); // Set the simplified map to state
         } catch (err) {
           console.error('Error fetching bond rates:', err);
-          // Có thể setError nếu muốn hiển thị lỗi trên UI
         }
       }
       
       fetchRates();
-      // Gọi lại khi user connect hoặc contract address thay đổi
-    }, [isConnected, BOND_CONTRACT_ADDRESS]);
+    }, [isConnected, BOND_CONTRACT_ADDRESS, publicClient]); // Added publicClient dependency
 
     return {
         address,

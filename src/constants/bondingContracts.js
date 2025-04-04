@@ -5,6 +5,19 @@ export const BOND_CONTRACT_ABI = [
     // --- View Functions ---
     {
       "inputs": [],
+      "name": "uniswapV3PoolAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "minPranaBuyAmount",
       "outputs": [
         {
