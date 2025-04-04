@@ -25,7 +25,6 @@ const BondingForm = () => {
         handleBuyBond,
         wbtcBalance,
         minPranaBuyAmountFormatted,
-        needsApproval,
         calculatedPranaForWbtc,
         calculatedWbtcForPrana,
     } = useBonding();
@@ -66,13 +65,7 @@ const BondingForm = () => {
         
         // Convert to number and format
         const numValue = Number(value);
-        
-        // If value is very small but non-zero, use scientific notation
-        if (numValue > 0 && numValue < 0.000001) {
-            return numValue.toExponential(4);
-        }
-        
-        // Otherwise use fixed decimal places
+
         return numValue.toFixed(9);
     };
     
@@ -87,15 +80,11 @@ const BondingForm = () => {
 
     const isInputDisabled = isLoading || isCalculating;
     const wbtcToApprove = inputType === 'PRANA' ? calculatedWbtcForPrana : wbtcAmount;
-    // const isApproveDisabled = isLoading || isCalculating || !needsApproval || !wbtcToApprove || parseFloat(wbtcToApprove) <= 0;
-
-    // const isBuyDisabled = isLoading || isCalculating || needsApproval || (inputType === 'WBTC' ? (!wbtcAmount || parseFloat(wbtcAmount) <= 0) : (!pranaAmount || parseFloat(pranaAmount) <= 0));
-
 
     return (
         <div className="bonding-form" key="bonding-form">
-            <h3>Mua PRANA Bond</h3>
-            <p style={{marginTop: '10px', marginBottom: '15px', lineHeight: '20px'}}>Mua PRANA với giá chiết khấu bằng cách khóa WBTC trong một khoảng thời gian. Thời gian khóa càng lâu chiết khấu càng lớn.</p>
+            <h3>Mua PRANA OTC</h3>
+            <p style={{marginTop: '10px', marginBottom: '15px', lineHeight: '20px', fontSize: '14px' }}>Bạn sẽ nhận được PRANA sau một khoảng thời gian vesting. Thời gian vesting càng lâu, chiết khấu càng lớn.</p>
 
             <div className="form-group bond-amount-group">
                 {/* Input PRANA */}
@@ -120,7 +109,7 @@ const BondingForm = () => {
 
                 {/* Input WBTC */}
                 <div className="bond-input-section">
-                    <label htmlFor="wbtc-amount">Mua PRANA với WBTC</label>
+                    <label htmlFor="wbtc-amount">Số lượng WBTC muốn bán</label>
                     <input
                         id="wbtc-amount"
                         type="text"
@@ -140,7 +129,7 @@ const BondingForm = () => {
             </div>
 
             <div className="form-group">
-                 <div id="term-label" className="form-label">Chọn kỳ hạn Bond - Thời gian khóa WBTC</div>
+                 <div id="term-label" className="form-label">Chọn kỳ hạn Bond - Thời gian vesting</div>
                  <DurationSlider
                     selectedIndex={termIndex}
                     setSelectedIndex={setTermIndex}

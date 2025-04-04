@@ -28,10 +28,7 @@ function App() {
           <div>
             <div className="card">
               <PranaBalance />
-            </div>
-            <div className="card">
-              <PoolInfo />
-            </div>
+            </div>            
             <div className="card">
               <BondingForm />
             </div>

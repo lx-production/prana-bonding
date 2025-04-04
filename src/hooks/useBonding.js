@@ -20,7 +20,7 @@ const useBonding = () => {
     const [inputType, setInputType] = useState('WBTC');
     const [wbtcAmount, setWbtcAmount] = useState('');
     const [pranaAmount, setPranaAmount] = useState('');
-    const [termIndex, setTermIndex] = useState(0); // Index in BOND_TERM_OPTIONS
+    const [termIndex, setTermIndex] = useState(1); // Index in BOND_TERM_OPTIONS
     const [bondRates, setBondRates] = useState({}); // Lưu trữ tỷ lệ bond { termInSeconds: rate }
     const [uniswapPoolAddress, setUniswapPoolAddress] = useState(WBTC_PRANA_V3_POOL); // Use the hardcoded address as a fallback
 
@@ -76,8 +76,6 @@ const useBonding = () => {
             if (!publicClient || !isConnected) return;
             
             try {
-                console.log("Attempting to verify contract at address:", BOND_CONTRACT_ADDRESS);
-                
                 // Try reading the pool address directly
                 const poolAddress = await publicClient.readContract({
                     address: BOND_CONTRACT_ADDRESS,
@@ -91,19 +89,14 @@ const useBonding = () => {
                     functionName: 'uniswapV3PoolAddress',
                 });
                 
-                console.log("Pool address from direct call:", poolAddress);
-                
                 if (poolAddress && poolAddress !== '0x0000000000000000000000000000000000000000') {
                     setUniswapPoolAddress(poolAddress);
                 } else {
                     // Fallback to hardcoded value
-                    console.log("Using fallback pool address:", WBTC_PRANA_V3_POOL);
                     setUniswapPoolAddress(WBTC_PRANA_V3_POOL);
                 }
             } catch (err) {
-                console.error("Error verifying contract:", err);
                 // Fallback to hardcoded value
-                console.log("Using fallback pool address after error:", WBTC_PRANA_V3_POOL);
                 setUniswapPoolAddress(WBTC_PRANA_V3_POOL);
             }
         };
@@ -120,55 +113,26 @@ const useBonding = () => {
 
     // Calculation effect - runs when inputs change
     useEffect(() => {
-        console.log("Effect triggered with:", {
-            inputType,
-            wbtcAmount,
-            pranaAmount,
-            isConnected,
-            hasPoolAddress: !!uniswapPoolAddress,
-            hasBondRates: Object.keys(bondRates).length > 0,
-            hasPublicClient: !!publicClient,
-            isValidWbtcInput,
-            isValidPranaInput
-        });
-
         const calculateAmounts = async () => {
             // Check if we have all required dependencies
             if (!isConnected || !uniswapPoolAddress || Object.keys(bondRates).length === 0 || !publicClient) {
-                console.log("Missing dependencies:", {
-                    isConnected,
-                    uniswapPoolAddress,
-                    bondRatesLength: Object.keys(bondRates).length,
-                    hasPublicClient: !!publicClient
-                });
                 setCalculatedPrana('0');
                 setCalculatedWbtc('0');
                 return; // Not ready yet
             }
-
-            console.log("Starting calculation with:", {
-                inputType,
-                wbtcAmount,
-                pranaAmount,
-                termIndex
-            });
             
             setIsCalculating(true);
             setCalculatedPrana('0'); // Reset previous calculations
             setCalculatedWbtc('0');
-            // console.log("Starting calculation..."); // Optional: add start log
 
             try {
                 const rateBasisPoints = getRateForTerm(termIndex, bondRates, BOND_TERM_OPTIONS);
                 if (rateBasisPoints < 0n) throw new Error("Invalid term index or rate");
 
                 if (inputType === 'WBTC' && isValidWbtcInput) {
-                    console.log(`Hook: Input WBTC Amount (string): ${wbtcAmount}`);
                     const wbtcAmountWei = parseUnits(wbtcAmount, WBTC_DECIMALS);
-                    console.log(`Hook: Input WBTC Amount (wei): ${wbtcAmountWei.toString()}`);
 
                     if (wbtcAmountWei === 0n) {
-                        console.log("Hook: WBTC amount in wei is zero, skipping calculation.");
                         setCalculatedPrana('0');
                     } else {
                         // Pass the full bondRates map to the helper
@@ -181,19 +145,14 @@ const useBonding = () => {
                             BOND_TERM_OPTIONS 
                         );
                         
-                        console.log(`Hook: Calculated PRANA (wei) from helper: ${calculatedPranaWei.toString()}`);
                         const formattedPrana = formatUnits(calculatedPranaWei, PRANA_DECIMALS);
-                        console.log(`Hook: Formatted PRANA (string): ${formattedPrana}`);
                         setCalculatedPrana(formattedPrana);
                     }
 
                 } else if (inputType === 'PRANA' && isValidPranaInput) {
-                    console.log(`Hook: Input PRANA Amount (string): ${pranaAmount}`);
                     const pranaAmountWei = parseUnits(pranaAmount, PRANA_DECIMALS);
-                    console.log(`Hook: Input PRANA Amount (wei): ${pranaAmountWei.toString()}`);
 
                      if (pranaAmountWei === 0n) {
-                        console.log("Hook: PRANA amount in wei is zero, skipping calculation.");
                         setCalculatedWbtc('0');
                     } else {
                         const finalWbtcAmountWei = await calculateWbtcAmount(
@@ -205,24 +164,19 @@ const useBonding = () => {
                             BOND_TERM_OPTIONS 
                         );
 
-                        console.log(`Hook: Calculated WBTC (wei) from helper: ${finalWbtcAmountWei.toString()}`);
                         const formattedWbtc = formatUnits(finalWbtcAmountWei, WBTC_DECIMALS);
-                        console.log(`Hook: Formatted WBTC (string): ${formattedWbtc}`);
                         setCalculatedWbtc(formattedWbtc); // Store the formatted string
                     }
                 } else {
-                    // console.log("Hook: No valid input to calculate."); // Optional log
                     setCalculatedPrana('0');
                     setCalculatedWbtc('0');
                 }
             } catch (err) {
-                console.error("Hook: Calculation error:", err);
                 setError("Lỗi tính toán giá trị."); // Set calculation-specific error
                 setCalculatedPrana('0');
                 setCalculatedWbtc('0');
             } finally {
                 setIsCalculating(false);
-                // console.log("Calculation finished."); // Optional: add end log
             }
         };
 
@@ -418,7 +372,6 @@ const useBonding = () => {
     useEffect(() => {
       async function fetchRates() {
         if (!isConnected || !publicClient) return;
-        console.log("Attempting to fetch bond rates..."); // Add log
 
         try {
           const result = await publicClient.readContract({
@@ -432,7 +385,6 @@ const useBonding = () => {
           // Note: viem returns BigInts for uint types.
           const [termEnums, rateValues, durationValues] = result;
 
-          console.log("Raw data from getAllBondRates:", { termEnums, rateValues, durationValues }); // Add log
 
           // Create a map to store { rate, duration } keyed by term duration in seconds
           let ratesInfoMap = {};

@@ -730,3 +730,21 @@ button {
   align-items: center;
 }
 
+.bond-amount-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.bond-input-section {
+  flex: 1;
+  margin-top: 1rem;
+}
+
+@media (max-width: 500px) {
+  .bond-amount-group {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
