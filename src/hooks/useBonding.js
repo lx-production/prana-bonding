@@ -17,10 +17,10 @@ const getRateForTerm = (termIndex, bondRatesMap, termOptions) => {
 
 const useBonding = () => {
     const { address, isConnected } = useAccount();
-    const [inputType, setInputType] = useState('WBTC'); // 'WBTC' hoặc 'PRANA'
+    const [inputType, setInputType] = useState('WBTC');
     const [wbtcAmount, setWbtcAmount] = useState('');
     const [pranaAmount, setPranaAmount] = useState('');
-    const [termIndex, setTermIndex] = useState(0); // Chỉ số cho BOND_TERM_OPTIONS
+    const [termIndex, setTermIndex] = useState(0); // Index in BOND_TERM_OPTIONS
     const [bondRates, setBondRates] = useState({}); // Lưu trữ tỷ lệ bond { termInSeconds: rate }
     const [uniswapPoolAddress, setUniswapPoolAddress] = useState(WBTC_PRANA_V3_POOL); // Use the hardcoded address as a fallback
 
@@ -71,23 +71,45 @@ const useBonding = () => {
     const minPranaBuyAmountWei = minBuyAmountData ? BigInt(minBuyAmountData) : BigInt(0);
 
     // Read the Uniswap V3 Pool address used by the bonding contract
-    useReadContract({
-        address: BOND_CONTRACT_ADDRESS,
-        abi: BOND_CONTRACT_ABI,
-        functionName: 'uniswapV3PoolAddress',
-        enabled: isConnected,
-        onSuccess: (data) => {
-            if (data && data !== '0x0000000000000000000000000000000000000000') {
-                console.log("Got pool address from contract:", data);
-                setUniswapPoolAddress(data);
-            } else {
-                console.error("Failed to get valid Uniswap Pool Address from Bonding contract, using fallback.");
+    useEffect(() => {
+        const verifyContract = async () => {
+            if (!publicClient || !isConnected) return;
+            
+            try {
+                console.log("Attempting to verify contract at address:", BOND_CONTRACT_ADDRESS);
+                
+                // Try reading the pool address directly
+                const poolAddress = await publicClient.readContract({
+                    address: BOND_CONTRACT_ADDRESS,
+                    abi: [{
+                        "inputs": [],
+                        "name": "uniswapV3PoolAddress",
+                        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                        "stateMutability": "view",
+                        "type": "function"
+                    }],
+                    functionName: 'uniswapV3PoolAddress',
+                });
+                
+                console.log("Pool address from direct call:", poolAddress);
+                
+                if (poolAddress && poolAddress !== '0x0000000000000000000000000000000000000000') {
+                    setUniswapPoolAddress(poolAddress);
+                } else {
+                    // Fallback to hardcoded value
+                    console.log("Using fallback pool address:", WBTC_PRANA_V3_POOL);
+                    setUniswapPoolAddress(WBTC_PRANA_V3_POOL);
+                }
+            } catch (err) {
+                console.error("Error verifying contract:", err);
+                // Fallback to hardcoded value
+                console.log("Using fallback pool address after error:", WBTC_PRANA_V3_POOL);
+                setUniswapPoolAddress(WBTC_PRANA_V3_POOL);
             }
-        },
-        onError: (err) => {
-            console.error("Error fetching uniswapPoolAddress:", err);
-        }
-    });
+        };
+        
+        verifyContract();
+    }, [publicClient, isConnected]);
 
     // --- Tính toán ---
 

@@ -687,6 +687,15 @@ button {
   box-shadow: var(--input-focus-shadow);
 }
 
+.bond-input-section {
+  margin-bottom: 1rem;
+}
+
+.calculated-amount {
+  color: var(--text-secondary);
+  margin-top: 0.7rem;
+}
+
 .info-notes {
   font-size: 0.8rem;
   color: var(--text-secondary);

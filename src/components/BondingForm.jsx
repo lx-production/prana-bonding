@@ -79,45 +79,25 @@ const BondingForm = () => {
     // Use our helper function for display
     const displayPurchasablePrana = isCalculating && inputType === 'WBTC' 
         ? 'Đang tính...' 
-        : `≈ ${formatPranaValue(calculatedPranaForWbtc)} PRANA`;
+        : `${formatPranaValue(calculatedPranaForWbtc)} PRANA`;
 
     const displayRequiredWbtc = isCalculating && inputType === 'PRANA' 
         ? 'Đang tính...' 
-        : `≈ ${Number(calculatedWbtcForPrana).toFixed(8)} WBTC`; // Use 8 decimals for WBTC
+        : `${Number(calculatedWbtcForPrana).toFixed(8)} WBTC`; // Use 8 decimals for WBTC
 
     const isInputDisabled = isLoading || isCalculating;
     const wbtcToApprove = inputType === 'PRANA' ? calculatedWbtcForPrana : wbtcAmount;
-    const isApproveDisabled = isLoading || isCalculating || !needsApproval || !wbtcToApprove || parseFloat(wbtcToApprove) <= 0;
+    // const isApproveDisabled = isLoading || isCalculating || !needsApproval || !wbtcToApprove || parseFloat(wbtcToApprove) <= 0;
 
-    const isBuyDisabled = isLoading || isCalculating || needsApproval || (inputType === 'WBTC' ? (!wbtcAmount || parseFloat(wbtcAmount) <= 0) : (!pranaAmount || parseFloat(pranaAmount) <= 0));
+    // const isBuyDisabled = isLoading || isCalculating || needsApproval || (inputType === 'WBTC' ? (!wbtcAmount || parseFloat(wbtcAmount) <= 0) : (!pranaAmount || parseFloat(pranaAmount) <= 0));
 
 
     return (
         <div className="bonding-form" key="bonding-form">
             <h3>Mua PRANA Bond</h3>
-            <p>Mua PRANA với giá chiết khấu bằng cách khóa WBTC trong một khoảng thời gian.</p>
+            <p style={{marginTop: '10px', marginBottom: '15px', lineHeight: '20px'}}>Mua PRANA với giá chiết khấu bằng cách khóa WBTC trong một khoảng thời gian. Thời gian khóa càng lâu chiết khấu càng lớn.</p>
 
             <div className="form-group bond-amount-group">
-                {/* Input WBTC */}
-                <div className="bond-input-section">
-                    <label htmlFor="wbtc-amount">Số lượng WBTC</label>
-                    <input
-                        id="wbtc-amount"
-                        type="text"
-                        value={wbtcAmount}
-                        onChange={(e) => handleInputChange(e, 'WBTC')}
-                        placeholder={`Số dư: ${parseFloat(wbtcBalance).toFixed(8)} WBTC`}
-                        disabled={isInputDisabled}
-                        className="form-input"
-                    />
-                    {/* Show calculated PRANA only when WBTC is the input type and amount is valid */}
-                    {inputType === 'WBTC' && wbtcAmount && parseFloat(wbtcAmount) > 0 && (
-                        <div className="calculated-amount">
-                            Ước tính nhận: <strong>{displayPurchasablePrana}</strong>
-                        </div>
-                    )}
-                </div>
-
                 {/* Input PRANA */}
                 <div className="bond-input-section">
                     <label htmlFor="prana-amount">Số lượng PRANA muốn mua</label>
@@ -137,10 +117,30 @@ const BondingForm = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Input WBTC */}
+                <div className="bond-input-section">
+                    <label htmlFor="wbtc-amount">Mua PRANA với WBTC</label>
+                    <input
+                        id="wbtc-amount"
+                        type="text"
+                        value={wbtcAmount}
+                        onChange={(e) => handleInputChange(e, 'WBTC')}
+                        placeholder={`${parseFloat(wbtcBalance).toFixed(8)} WBTC`}
+                        disabled={isInputDisabled}
+                        className="form-input"
+                    />
+                    {/* Show calculated PRANA only when WBTC is the input type and amount is valid */}
+                    {inputType === 'WBTC' && wbtcAmount && parseFloat(wbtcAmount) > 0 && (
+                        <div className="calculated-amount">
+                            Ước tính nhận: <strong>{displayPurchasablePrana}</strong>
+                        </div>
+                    )}
+                </div>                
             </div>
 
             <div className="form-group">
-                 <div id="term-label" className="form-label">Chọn kỳ hạn Bond</div>
+                 <div id="term-label" className="form-label">Chọn kỳ hạn Bond - Thời gian khóa WBTC</div>
                  <DurationSlider
                     selectedIndex={termIndex}
                     setSelectedIndex={setTermIndex}
@@ -157,30 +157,28 @@ const BondingForm = () => {
             {success && <div className="success-message">{success}</div>}
 
             <div className="action-buttons">
-                {needsApproval && (
-                     <button
-                        className="btn-primary"
-                        onClick={handleApprove}
-                        disabled={isApproveDisabled}
-                    >
-                        {isLoading && writeStatus === 'pending' ? (
-                            <><span className="spinner">↻</span>Đang phê duyệt...</>
-                        ) : (
-                            // Use the validated wbtcToApprove and format it
-                             `Phê duyệt ${wbtcToApprove ? Number(wbtcToApprove).toFixed(8) : '0.00000000'} WBTC`
-                        )}
-                    </button>
-                )}
-
-                 <button
-                    className={`btn-secondary ${needsApproval ? '' : 'btn-full-width'}`}
-                    onClick={handleBuyBond}
-                    disabled={isBuyDisabled}
-                 >
-                    {(isLoading && writeStatus === 'pending') || isCalculating ? (
-                        <><span className="spinner">↻</span>{isCalculating ? 'Đang tính...' : 'Đang mua Bond...'}</>
+                <button
+                    className="btn-secondary"
+                    onClick={handleApprove}
+                    // disabled={isApproveDisabled}
+                >
+                    {isLoading && writeStatus === 'pending' ? (
+                        <><span className="spinner">↻</span>Approving...</>
                     ) : (
-                        'Mua Bond'
+                        // Use the validated wbtcToApprove and format it
+                            `Approve ${wbtcToApprove ? Number(wbtcToApprove).toFixed(8) : '0.00000000'} WBTC`
+                    )}
+                </button>
+
+                <button
+                    className="btn-primary"
+                    onClick={handleBuyBond}
+                    // disabled={isBuyDisabled}
+                >
+                    {(isLoading && writeStatus === 'pending') || isCalculating ? (
+                        <><span className="spinner">↻</span>{isCalculating ? 'Calculating...' : 'Buying Bond...'}</>
+                    ) : (
+                        'Buy Bond'
                     )}
                 </button>
             </div>

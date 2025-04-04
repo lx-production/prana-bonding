@@ -33,7 +33,7 @@ const DurationSlider = ({
   
   return (
     <ThemeProvider theme={muiTheme}>
-      <Box sx={{ width: '100%', padding: '20px 10px' }}>
+      <Box sx={{ width: '100%', padding: '20px 10px', marginTop: '20px' }}>
         <Slider
           aria-labelledby={labelId}
           aria-label="Select Option"
