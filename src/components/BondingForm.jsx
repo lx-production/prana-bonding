@@ -27,6 +27,7 @@ const BondingForm = () => {
         minPranaBuyAmountFormatted,
         calculatedPranaForWbtc,
         calculatedWbtcForPrana,
+        needsApproval,
     } = useBonding();
 
     if (!isConnected) return <p>Vui lòng kết nối ví của bạn.</p>;
@@ -146,12 +147,13 @@ const BondingForm = () => {
                 <button
                     className="btn-primary"
                     onClick={handleBuyBond}
-                    // disabled={isBuyDisabled}
+                    // Combine all disable conditions
+                    disabled={needsApproval || (isLoading && writeStatus === 'pending') || isCalculating}
                 >
                     {(isLoading && writeStatus === 'pending') || isCalculating ? (
                         <><span className="spinner">↻</span>{isCalculating ? 'Calculating...' : 'Buying Bond...'}</>
                     ) : (
-                        'Buy Bond'
+                         needsApproval ? 'Approval Required' : 'Buy Bond'
                     )}
                 </button>
             </div>

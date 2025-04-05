@@ -776,12 +776,6 @@ button {
 
 /* --- Active Bonds Styles --- */
 
-.active-bonds-container {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
-}
-
 .active-bonds-container h2 { /* Reusing h2 style */
   margin-bottom: 1.25rem;
   color: var(--text-primary);
