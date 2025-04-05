@@ -748,3 +748,24 @@ button {
   }
 }
 
+/* Add this new class for the balance cards container */
+.balance-cards-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem; /* Adding some gap between the cards */
+  margin-bottom: 1rem; /* Keeping consistent spacing with other cards */
+}
+
+/* Update the existing .card class to handle flex layout */
+.balance-cards-container .card {
+  flex: 1; /* Allow cards to grow equally */
+  margin-bottom: 0; /* Remove bottom margin since container handles spacing */
+}
+
+/* Add responsive behavior */
+@media (max-width: 500px) {
+  .balance-cards-container {
+    flex-direction: column;
+  }
+}
+

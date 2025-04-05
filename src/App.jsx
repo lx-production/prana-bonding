@@ -2,8 +2,8 @@ import React from 'react';
 import { useAccount } from 'wagmi';
 import ConnectWallet from './components/ConnectWallet';
 import PranaBalance from './components/PranaBalance';
+import WbtcBalance from './components/WbtcBalance';
 import ThemeSwitcher from './components/ThemeSwitcher';
-import PoolInfo from './components/PoolInfo';
 import BondingForm from './components/BondingForm';
 
 function App() {
@@ -26,9 +26,14 @@ function App() {
       <main>        
         {isConnected ? (
           <div>
-            <div className="card">
-              <PranaBalance />
-            </div>            
+            <div className="balance-cards-container">
+              <div className="card">
+                <PranaBalance />
+              </div>
+              <div className="card">
+                <WbtcBalance />
+              </div>
+            </div>
             <div className="card">
               <BondingForm />
             </div>

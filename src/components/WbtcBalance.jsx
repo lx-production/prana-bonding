@@ -1,18 +1,18 @@
 import React from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { PRANA_ADDRESS, PRANA_ABI } from '../constants/sharedContracts';
+import { WBTC_ADDRESS, WBTC_ABI } from '../constants/sharedContracts';
 
-const PranaBalance = () => {
+const WbtcBalance = () => {
   const { address, isConnected } = useAccount();
   
   // Log the address for debugging
   console.log("Connected address:", address);
-  console.log("Token address:", PRANA_ADDRESS);
+  console.log("Token address:", WBTC_ADDRESS);
   
   const { data: balance, isLoading, error } = useReadContract({
-    address: PRANA_ADDRESS,
-    abi: PRANA_ABI,
+    address: WBTC_ADDRESS,
+    abi: WBTC_ABI,
     functionName: 'balanceOf',
     args: [address],
     enabled: isConnected && !!address,
@@ -24,24 +24,24 @@ const PranaBalance = () => {
   }
 
   // Hardcoded decimals value instead of fetching from blockchain
-  const decimals = 9;
+  const decimals = 8;
 
   if (!isConnected) return null;
 
   return (
     <div className="balance-container">
-      <h3>My PRANA Balance</h3>
+      <h3>My WBTC Balance</h3>
       {isLoading ? (
         <p>Loading balance...</p>
       ) : error ? (
         <p className="error">Error loading balance: {error.message || 'Unknown error'}</p>
       ) : (
         <p className="balance">
-          {balance ? formatUnits(balance, decimals) : '0'} <span className="token-symbol">PRANA</span>
+          {balance ? formatUnits(balance, decimals) : '0'} <span className="token-symbol">WBTC</span>
         </p>
       )}
     </div>
   );
 };
 
-export default PranaBalance; 
+export default WbtcBalance; 

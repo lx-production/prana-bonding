@@ -1,7 +1,7 @@
 export const WBTC_ADDRESS = '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6';
 
 // PRANA Token contract (ERC20 with permit functionality)
-export const PRANA_TOKEN_ADDRESS = '0x928277e774F34272717EADFafC3fd802dAfBD0F5'; // Replace with actual token address
+export const PRANA_ADDRESS = '0x928277e774F34272717EADFafC3fd802dAfBD0F5'; // Replace with actual token address
 
 // Token Decimals
 export const PRANA_DECIMALS = 9;
@@ -42,7 +42,7 @@ export const V3_POOL_LIQUIDITY_ABI = [
 ];
 
 // Contract ABIs - Using standard JSON format instead of human-readable format
-export const PRANA_TOKEN_ABI = [
+export const PRANA_ABI = [
   // ERC20 standard functions
   {
     "name": "name",
