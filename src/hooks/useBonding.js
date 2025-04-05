@@ -1,19 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
-import { BOND_CONTRACT_ADDRESS, BOND_CONTRACT_ABI } from '../constants/bondingContracts';
-import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS, WBTC_PRANA_V3_POOL } from '../constants/sharedContracts';
+import { BOND_ADDRESS, BOND_ABI } from '../constants/bondingContracts';
+import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
 import { BOND_TERM_OPTIONS } from '../constants/bondingTerms';
-import { getReserves } from '../utils/UniswapV3Helper';
-
-// Helper function to get rate (in basis points) from termIndex
-const getRateForTerm = (termIndex, bondRatesMap, termOptions) => {
-    const selectedOption = termOptions[termIndex];
-    if (!selectedOption) return 0n;
-    const rateInfo = bondRatesMap[selectedOption.seconds];
-    // Ensure rate is treated as BigInt
-    return rateInfo ? rateInfo.rate : 0n;
-};
 
 const useBonding = () => {
     const { address, isConnected } = useAccount();
@@ -22,8 +12,6 @@ const useBonding = () => {
     const [pranaAmount, setPranaAmount] = useState('');
     const [termIndex, setTermIndex] = useState(1); // Index in BOND_TERM_OPTIONS
     const [bondRates, setBondRates] = useState({}); // Lưu trữ tỷ lệ bond { termInSeconds: rate }
-    const [uniswapPoolAddress, setUniswapPoolAddress] = useState(WBTC_PRANA_V3_POOL); // Use the hardcoded address as a fallback
-
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false); // Thêm state loading riêng
@@ -54,7 +42,7 @@ const useBonding = () => {
         address: WBTC_ADDRESS,
         abi: WBTC_ABI,
         functionName: 'allowance',
-        args: [address, BOND_CONTRACT_ADDRESS],
+        args: [address, BOND_ADDRESS],
         enabled: isConnected && !!address,
         watch: true, // Theo dõi thay đổi allowance
     });
@@ -62,47 +50,13 @@ const useBonding = () => {
 
     // Đọc Min Buy Amount (tính bằng PRANA)
     const { data: minBuyAmountData } = useReadContract({
-        address: BOND_CONTRACT_ADDRESS,
-        abi: BOND_CONTRACT_ABI,
+        address: BOND_ADDRESS,
+        abi: BOND_ABI,
         functionName: 'minPranaBuyAmount',
         enabled: isConnected,
     });
     const minPranaBuyAmountFormatted = minBuyAmountData ? formatUnits(minBuyAmountData, PRANA_DECIMALS) : '0';
-    const minPranaBuyAmountWei = minBuyAmountData ? BigInt(minBuyAmountData) : BigInt(0);
-
-    // Read the Uniswap V3 Pool address used by the bonding contract
-    useEffect(() => {
-        const verifyContract = async () => {
-            if (!publicClient || !isConnected) return;
-            
-            try {
-                // Try reading the pool address directly
-                const poolAddress = await publicClient.readContract({
-                    address: BOND_CONTRACT_ADDRESS,
-                    abi: [{
-                        "inputs": [],
-                        "name": "uniswapV3PoolAddress",
-                        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    }],
-                    functionName: 'uniswapV3PoolAddress',
-                });
-                
-                if (poolAddress && poolAddress !== '0x0000000000000000000000000000000000000000') {
-                    setUniswapPoolAddress(poolAddress);
-                } else {
-                    // Fallback to hardcoded value
-                    setUniswapPoolAddress(WBTC_PRANA_V3_POOL);
-                }
-            } catch (err) {
-                // Fallback to hardcoded value
-                setUniswapPoolAddress(WBTC_PRANA_V3_POOL);
-            }
-        };
-        
-        verifyContract();
-    }, [publicClient, isConnected]);
+    const minPranaBuyAmountWei = minBuyAmountData ? BigInt(minBuyAmountData) : BigInt(0);    
 
     // --- Calculations (Client-side) ---
 
@@ -132,8 +86,8 @@ const useBonding = () => {
                     } else {
                         // Call the contract's calculatePranaAmount function directly
                         const calculatedPranaWei = await publicClient.readContract({
-                            address: BOND_CONTRACT_ADDRESS,
-                            abi: BOND_CONTRACT_ABI,
+                            address: BOND_ADDRESS,
+                            abi: BOND_ABI,
                             functionName: 'calculatePranaAmount',
                             args: [wbtcAmountWei, selectedTermEnum]
                         });
@@ -150,8 +104,8 @@ const useBonding = () => {
                     } else {
                         // Call the contract's calculateWbtcAmount function directly
                         const finalWbtcAmountWei = await publicClient.readContract({
-                            address: BOND_CONTRACT_ADDRESS,
-                            abi: BOND_CONTRACT_ABI,
+                            address: BOND_ADDRESS,
+                            abi: BOND_ABI,
                             functionName: 'calculateWbtcAmount',
                             args: [pranaAmountWei, selectedTermEnum]
                         });
@@ -222,7 +176,7 @@ const useBonding = () => {
                 address: WBTC_ADDRESS,
                 abi: WBTC_ABI,
                 functionName: 'approve',
-                args: [BOND_CONTRACT_ADDRESS, amountToApprove],
+                args: [BOND_ADDRESS, amountToApprove],
             });
             setSuccess(`Phê duyệt thành công! Transaction: ${hash}. Vui lòng đợi giao dịch xác nhận.`);
             // Không reset form ở đây, chỉ thông báo
@@ -276,7 +230,7 @@ const useBonding = () => {
                  setLoading(false); return;
              }
 
-            functionToCall = 'buyBondWithWbtc';
+            functionToCall = 'buyBondForWbtcAmount';
             args = [finalWbtcAmountWei, selectedTermEnum];
 
         } else { // inputType === 'PRANA'
@@ -303,15 +257,15 @@ const useBonding = () => {
                  setLoading(false); return;
             }
 
-            functionToCall = 'buyBondWithPrana';
+            functionToCall = 'buyBondForPranaAmount';
             args = [finalPranaAmountWei, selectedTermEnum];
         }
         // --- End determination ---
 
         try {
             const hash = await writeContractAsync({ // Lấy hash từ kết quả
-                address: BOND_CONTRACT_ADDRESS,
-                abi: BOND_CONTRACT_ABI,
+                address: BOND_ADDRESS,
+                abi: BOND_ABI,
                 functionName: functionToCall,
                 args: args,
             });
@@ -368,8 +322,8 @@ const useBonding = () => {
 
         try {
           const result = await publicClient.readContract({
-            address: BOND_CONTRACT_ADDRESS,
-            abi: BOND_CONTRACT_ABI,
+            address: BOND_ADDRESS,
+            abi: BOND_ABI,
             functionName: 'getAllBondRates'
           });
 
@@ -421,7 +375,7 @@ const useBonding = () => {
       }
 
       fetchRates();
-    }, [isConnected, publicClient, BOND_CONTRACT_ADDRESS]);
+    }, [isConnected, publicClient, BOND_ADDRESS]);
 
     return {
         address,

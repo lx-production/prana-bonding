@@ -106,7 +106,7 @@ const BondingForm = () => {
                     {/* Show calculated PRANA only when WBTC is the input type and amount is valid */}
                     {inputType === 'WBTC' && wbtcAmount && parseFloat(wbtcAmount) > 0 && (
                         <div className="calculated-amount">
-                            Ước tính nhận: <strong>{displayPurchasablePrana}</strong>
+                            Nhận được: <strong>{displayPurchasablePrana}</strong>
                         </div>
                     )}
                 </div>                

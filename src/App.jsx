@@ -5,7 +5,8 @@ import PranaBalance from './components/PranaBalance';
 import WbtcBalance from './components/WbtcBalance';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import BondingForm from './components/BondingForm';
-
+import ActiveBonds from './components/ActiveBonds';
+import ContractBalance from './components/ContractBalance';
 function App() {
   const { isConnected } = useAccount();
 
@@ -26,6 +27,9 @@ function App() {
       <main>        
         {isConnected ? (
           <div>
+            <div className="card">
+                <ContractBalance />
+              </div>
             <div className="balance-cards-container">
               <div className="card">
                 <PranaBalance />
@@ -36,6 +40,9 @@ function App() {
             </div>
             <div className="card">
               <BondingForm />
+            </div>
+            <div className="card">
+              <ActiveBonds />
             </div>
           </div>
         ) : (
@@ -49,21 +56,13 @@ function App() {
       <footer className="footer">
         <p>©2025 PRANA Protocol</p>
         <a
-          href="https://polygonscan.com/address/0x714425A4F4d624ef83fEff810a0EEC30B0847868"
+          href="https://polygonscan.com/address/0xA3adf8952982Eac60C0E43d6F93C66E7363c6Fe2"
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
         >
-          Staking Contract
-        </a>
-        <a
-          href="https://polygonscan.com/address/0x1DE1E9BEF781fb3440C2c22E8ca1bF61BD26f69d#tokentxns"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="footer-link"
-        >
-          Interest Contract
-        </a>
+          Bonding Contract
+        </a>        
         <div className="footer-links">          
           <a 
             href="https://github.com/lx-production/prana-staking"
