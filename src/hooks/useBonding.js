@@ -4,7 +4,7 @@ import { parseUnits, formatUnits } from 'viem';
 import { BOND_CONTRACT_ADDRESS, BOND_CONTRACT_ABI } from '../constants/bondingContracts';
 import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS, WBTC_PRANA_V3_POOL } from '../constants/sharedContracts';
 import { BOND_TERM_OPTIONS } from '../constants/bondingTerms';
-import { calculatePranaAmount, calculateWbtcAmount } from '../utils/UniswapV3Helper';
+import { getReserves } from '../utils/UniswapV3Helper';
 
 // Helper function to get rate (in basis points) from termIndex
 const getRateForTerm = (termIndex, bondRatesMap, termOptions) => {
@@ -104,8 +104,6 @@ const useBonding = () => {
         verifyContract();
     }, [publicClient, isConnected]);
 
-    // --- Tính toán ---
-
     // --- Calculations (Client-side) ---
 
     const isValidWbtcInput = useMemo(() => wbtcAmount && !isNaN(parseFloat(wbtcAmount)) && parseFloat(wbtcAmount) > 0, [wbtcAmount]);
@@ -115,7 +113,7 @@ const useBonding = () => {
     useEffect(() => {
         const calculateAmounts = async () => {
             // Check if we have all required dependencies
-            if (!isConnected || !uniswapPoolAddress || Object.keys(bondRates).length === 0 || !publicClient) {
+            if (!isConnected || !publicClient) {
                 setCalculatedPrana('0');
                 setCalculatedWbtc('0');
                 return; // Not ready yet
@@ -126,24 +124,19 @@ const useBonding = () => {
             setCalculatedWbtc('0');
 
             try {
-                const rateBasisPoints = getRateForTerm(termIndex, bondRates, BOND_TERM_OPTIONS);
-                if (rateBasisPoints < 0n) throw new Error("Invalid term index or rate");
-
                 if (inputType === 'WBTC' && isValidWbtcInput) {
                     const wbtcAmountWei = parseUnits(wbtcAmount, WBTC_DECIMALS);
 
                     if (wbtcAmountWei === 0n) {
                         setCalculatedPrana('0');
                     } else {
-                        // Pass the full bondRates map to the helper
-                        const calculatedPranaWei = await calculatePranaAmount(
-                            wbtcAmountWei,
-                            termIndex, 
-                            bondRates, 
-                            publicClient,
-                            uniswapPoolAddress,
-                            BOND_TERM_OPTIONS 
-                        );
+                        // Call the contract's calculatePranaAmount function directly
+                        const calculatedPranaWei = await publicClient.readContract({
+                            address: BOND_CONTRACT_ADDRESS,
+                            abi: BOND_CONTRACT_ABI,
+                            functionName: 'calculatePranaAmount',
+                            args: [wbtcAmountWei, selectedTermEnum]
+                        });
                         
                         const formattedPrana = formatUnits(calculatedPranaWei, PRANA_DECIMALS);
                         setCalculatedPrana(formattedPrana);
@@ -155,14 +148,13 @@ const useBonding = () => {
                      if (pranaAmountWei === 0n) {
                         setCalculatedWbtc('0');
                     } else {
-                        const finalWbtcAmountWei = await calculateWbtcAmount(
-                            pranaAmountWei,
-                            termIndex, 
-                            bondRates, 
-                            publicClient,
-                            uniswapPoolAddress,
-                            BOND_TERM_OPTIONS 
-                        );
+                        // Call the contract's calculateWbtcAmount function directly
+                        const finalWbtcAmountWei = await publicClient.readContract({
+                            address: BOND_CONTRACT_ADDRESS,
+                            abi: BOND_CONTRACT_ABI,
+                            functionName: 'calculateWbtcAmount',
+                            args: [pranaAmountWei, selectedTermEnum]
+                        });
 
                         const formattedWbtc = formatUnits(finalWbtcAmountWei, WBTC_DECIMALS);
                         setCalculatedWbtc(formattedWbtc); // Store the formatted string
@@ -172,6 +164,7 @@ const useBonding = () => {
                     setCalculatedWbtc('0');
                 }
             } catch (err) {
+                console.error("Calculation error:", err);
                 setError("Lỗi tính toán giá trị."); // Set calculation-specific error
                 setCalculatedPrana('0');
                 setCalculatedWbtc('0');
@@ -188,8 +181,8 @@ const useBonding = () => {
         return () => clearTimeout(debounceTimeout);
 
     }, [
-        wbtcAmount, pranaAmount, inputType, termIndex, isConnected, uniswapPoolAddress,
-        bondRates, publicClient, isValidWbtcInput, isValidPranaInput // Dependencies
+        wbtcAmount, pranaAmount, inputType, termIndex, isConnected, 
+        publicClient, isValidWbtcInput, isValidPranaInput, selectedTermEnum // Updated dependencies
     ]);
 
     // --- Cập nhật Loading State ---

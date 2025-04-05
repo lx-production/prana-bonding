@@ -33,22 +33,17 @@ const BondingForm = () => {
 
     const handleInputChange = (e, type) => {
         const value = e.target.value;
-        console.log(`Input change - type: ${type}, value: ${value}`);
          // Chỉ cho phép số và dấu thập phân
         if (value === '' || /^[0-9]*[.]?[0-9]*$/.test(value)) {
             if (type === 'WBTC') {
-                console.log('Setting WBTC amount:', value);
                 setWbtcAmount(value);
                 if (inputType === 'PRANA') {
-                    console.log('Switching input type to WBTC');
                     setInputType('WBTC');
                 }
                 setPranaAmount('');
             } else { // PRANA
-                console.log('Setting PRANA amount:', value);
                 setPranaAmount(value);
                 if (inputType === 'WBTC') {
-                    console.log('Switching input type to PRANA');
                     setInputType('PRANA');
                 }
                 setWbtcAmount('');
@@ -57,25 +52,14 @@ const BondingForm = () => {
             console.log('Invalid input value:', value);
         }
     };    
-
-    // Make sure we're properly parsing very small numbers
-    const formatPranaValue = (value) => {
-        // If zero or invalid, return "0"
-        if (!value || value === '0' || isNaN(Number(value))) return "0";
-        
-        // Convert to number and format
-        const numValue = Number(value);
-
-        return numValue.toFixed(9);
-    };
     
     // Use our helper function for display
     const displayPurchasablePrana = isCalculating && inputType === 'WBTC' 
-        ? 'Đang tính...' 
-        : `${formatPranaValue(calculatedPranaForWbtc)} PRANA`;
+        ? 'Calculating...' 
+        : `${Number(calculatedPranaForWbtc).toFixed(9)} PRANA`;
 
     const displayRequiredWbtc = isCalculating && inputType === 'PRANA' 
-        ? 'Đang tính...' 
+        ? 'Calculating...' 
         : `${Number(calculatedWbtcForPrana).toFixed(8)} WBTC`; // Use 8 decimals for WBTC
 
     const isInputDisabled = isLoading || isCalculating;

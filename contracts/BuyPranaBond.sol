@@ -120,7 +120,7 @@ contract BuyPranaBond is AccessControl, ReentrancyGuard, Pausable {
     }   
 
     // Create a bond to buy discounted PRANA with WBTC
-    function buyBondWithPrana(uint256 pranaAmount, BondTerm period) external nonReentrant whenNotPaused returns (uint256) {
+    function buyBondForPranaAmount(uint256 pranaAmount, BondTerm period) external nonReentrant whenNotPaused returns (uint256) {
         // Check minimum PRANA buy amount requirement
         require(pranaAmount >= minPranaBuyAmount, "PRANA amount below minimum");
         
@@ -129,7 +129,7 @@ contract BuyPranaBond is AccessControl, ReentrancyGuard, Pausable {
         require(pranaAmount <= availablePrana, "Not enough PRANA available in treasury");
         
         // Calculate required WBTC amount for the desired PRANA amount
-        uint256 wbtcAmount = _calculateWbtcAmount(pranaAmount, period);
+        uint256 wbtcAmount = calculateWbtcAmount(pranaAmount, period);
         
         // Transfer WBTC from user to contract
         IERC20(WBTC).safeTransferFrom(msg.sender, address(this), wbtcAmount);
@@ -163,9 +163,9 @@ contract BuyPranaBond is AccessControl, ReentrancyGuard, Pausable {
     }    
     
     // Create a bond to buy discounted PRANA by specifying the WBTC amount
-    function buyBondWithWbtc(uint256 wbtcAmount, BondTerm period) external nonReentrant whenNotPaused returns (uint256) {
+    function buyBondForWbtcAmount(uint256 wbtcAmount, BondTerm period) external nonReentrant whenNotPaused returns (uint256) {
         // Calculate the corresponding PRANA amount for the given WBTC
-        uint256 pranaAmount = _calculatePranaAmount(wbtcAmount, period);
+        uint256 pranaAmount = calculatePranaAmount(wbtcAmount, period);
         
         // Check minimum PRANA buy amount requirement
         require(pranaAmount >= minPranaBuyAmount, "Calculated PRANA amount below minimum");
@@ -206,7 +206,7 @@ contract BuyPranaBond is AccessControl, ReentrancyGuard, Pausable {
     }
     
     // Calculate the required WBTC amount for a desired PRANA amount
-    function _calculateWbtcAmount(uint256 pranaAmount, BondTerm period) internal view returns (uint256) {
+    function calculateWbtcAmount(uint256 pranaAmount, BondTerm period) public view returns (uint256) {
         // Get reserves from helper function using the configured pool address
         (uint256 wbtcReserve, uint256 pranaReserve) = UniswapV3Helper._getReserves(uniswapV3PoolAddress);
         
@@ -226,7 +226,7 @@ contract BuyPranaBond is AccessControl, ReentrancyGuard, Pausable {
     }   
     
     // Calculate the amount of PRANA that can be purchased with a given WBTC amount
-    function _calculatePranaAmount(uint256 wbtcAmount, BondTerm period) internal view returns (uint256) {
+    function calculatePranaAmount(uint256 wbtcAmount, BondTerm period) public view returns (uint256) {
         // Get reserves from helper function using the configured pool address
         (uint256 wbtcReserve, uint256 pranaReserve) = UniswapV3Helper._getReserves(uniswapV3PoolAddress);
         

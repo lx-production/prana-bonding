@@ -1,4 +1,4 @@
-export const BOND_CONTRACT_ADDRESS = '0x2e5299925cF81b540355c176b0D43E6FAF20e753';
+export const BOND_CONTRACT_ADDRESS = '0xA3adf8952982Eac60C0E43d6F93C66E7363c6Fe2';
 
 // Bond Contract ABI - Updated based on BuyPranaBond.json for UI needs
 export const BOND_CONTRACT_ABI = [
@@ -169,7 +169,55 @@ export const BOND_CONTRACT_ABI = [
       "stateMutability": "nonpayable",
       "type": "function"
     },
-  
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "wbtcAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "enum BuyPranaBond.BondTerm",
+          "name": "period",
+          "type": "uint8"
+        }
+      ],
+      "name": "calculatePranaAmount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "pranaAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "enum BuyPranaBond.BondTerm",
+          "name": "period",
+          "type": "uint8"
+        }
+      ],
+      "name": "calculateWbtcAmount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    
     // --- Events ---
      {
       "anonymous": false,
