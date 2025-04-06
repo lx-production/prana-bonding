@@ -31,7 +31,7 @@ export const SELL_BOND_ABI = [
     },
     {
       "inputs": [],
-      "name": "minPranaBuyAmount",
+      "name": "minPranaSellAmount",
       "outputs": [
         {
           "internalType": "uint256",

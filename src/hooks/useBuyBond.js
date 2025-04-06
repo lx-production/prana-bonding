@@ -178,20 +178,20 @@ const useBuyBond = () => {
                 functionName: 'approve',
                 args: [BUY_BOND_ADDRESS, amountToApprove],
             });
-            setSuccess(`Phê duyệt thành công! Transaction: ${hash}. Vui lòng đợi giao dịch xác nhận.`);
+            setSuccess(`Approve thành công! Transaction: ${hash}.`);
             // Không reset form ở đây, chỉ thông báo
             // refetchAllowance sẽ tự động cập nhật khi watch=true hoặc có thể gọi thủ công nếu cần
             refetchAllowance(); // Chủ động gọi lại fetch allowance
         } catch (err) {
             console.error("Approve error:", err);
             // Xử lý lỗi tương tự useStaking.js
-            let errorMsg = 'Phê duyệt thất bại';
+            let errorMsg = 'Approve thất bại';
              if (err.message?.includes('rejected') || err.message?.includes('denied')) {
                errorMsg = 'Yêu cầu phê duyệt bị từ chối';
              } else if (err.message?.includes('insufficient funds')) {
                errorMsg = 'Không đủ gas để thực hiện giao dịch';
              } else {
-               errorMsg = `Phê duyệt thất bại: ${err.shortMessage || err.message || 'Lỗi không xác định'}`;
+               errorMsg = `Approve thất bại: ${err.shortMessage || err.message || 'Lỗi không xác định'}`;
              }
             setError(errorMsg);
         } finally {
@@ -269,7 +269,7 @@ const useBuyBond = () => {
                 functionName: functionToCall,
                 args: args,
             });
-            setSuccess(`Gửi giao dịch mua bond thành công! Hash: ${hash}`);
+            setSuccess(`Giao dịch mua bond đã được gửi thành công! Hash: ${hash}`);
             setWbtcAmount('');
             setPranaAmount('');
             setCalculatedPrana('0'); // Reset calculated values
@@ -290,7 +290,7 @@ const useBuyBond = () => {
              } else if (err.message?.includes('PRANA amount below minimum')) {
                  errorMsg = `Lỗi: Số lượng PRANA thấp hơn mức tối thiểu (${minPranaBuyAmountFormatted}). Giao dịch bị revert.`;
              } else if (err.message?.includes('Not enough PRANA available')) {
-                 errorMsg = "Lỗi: Kho bạc không đủ PRANA để bán. Giao dịch bị revert.";
+                 errorMsg = "Lỗi: Kho bạc không đủ PRANA để bán. Giao dịch thất bại.";
              } else {
                 errorMsg = `Mua bond thất bại: ${err.shortMessage || err.message || 'Lỗi không xác định'}`;
              }

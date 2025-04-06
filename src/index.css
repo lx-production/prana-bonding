@@ -913,3 +913,54 @@ button {
   cursor: not-allowed;
 }
 
+/* Bond Forms Tabs Styles */
+.bond-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+  justify-content: center;
+}
+
+.bond-tab {
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.bond-tab:hover {
+  color: var(--primary-color);
+}
+
+.bond-tab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.bond-tab-content {
+  display: none;
+}
+
+.bond-tab-content.active {
+  display: block;
+}
+
+/* Adjust the parent card to have consistent padding */
+.card.bond-card-container {
+  padding: 7%;
+}
+
+@media (max-width: 500px) {
+  .bond-tabs {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  
+  .bond-tab {
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+  }
+}
+

@@ -68,7 +68,7 @@ const BuyBondForm = () => {
     return (
         <div className="bonding-form" key="bonding-form">
             <h3>Mua PRANA OTC</h3>
-            <p style={{marginTop: '10px', marginBottom: '15px', lineHeight: '20px', fontSize: '14px' }}>Bạn sẽ nhận được toàn bộ số PRANA sau thời gian vesting (vẫn có thể claim số PRANA vested trong thời gian này). Thời gian vesting càng lâu, chiết khấu càng lớn.</p>
+            <p style={{marginTop: '10px', marginBottom: '15px', lineHeight: '20px', fontSize: '15px' }}>Bạn sẽ nhận được PRANA với giá chiết khấu so với thị trường. Số PRANA này sẽ được trả dần trong suốt kỳ hạn bond (vesting). Thời gian vesting càng lâu, chiết khấu càng lớn.</p>
 
             <div className="form-group bond-amount-group">
                 {/* Input PRANA */}

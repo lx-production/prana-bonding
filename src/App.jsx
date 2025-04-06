@@ -1,16 +1,34 @@
 import React from 'react';
 import { useAccount } from 'wagmi';
 import ConnectWallet from './components/ConnectWallet';
-import PranaBalance from './components/PranaBalance';
-import WbtcBalance from './components/WbtcBalance';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import BuyBondForm from './components/BuyBondForm';
+import SellBondForm from './components/SellBondForm';
 import ActiveBonds from './components/ActiveBonds';
 import BuyBondBalance from './components/BuyBondBalance';
 import SellBondBalance from './components/SellBondBalance';
 
 function App() {
   const { isConnected } = useAccount();
+
+  const handleTabChange = (tabName) => {
+    // Remove active class from all tabs and contents
+    document.querySelectorAll('.bond-tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    document.querySelectorAll('.bond-tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+    
+    // Add active class to selected tab and content
+    if (tabName === 'buy') {
+      document.getElementById('buy-bond-tab').classList.add('active');
+      document.getElementById('buy-bond-content').classList.add('active');
+    } else if (tabName === 'sell') {
+      document.getElementById('sell-bond-tab').classList.add('active');
+      document.getElementById('sell-bond-content').classList.add('active');
+    }
+  };
 
   return (
     <div className="container">
@@ -37,8 +55,23 @@ function App() {
                 <SellBondBalance />
               </div>
             </div>            
-            <div className="card">
-              <BuyBondForm />
+            <div className="card bond-card-container">
+              <div className="bond-tabs">
+                <div className="bond-tab active" id="buy-bond-tab" onClick={() => handleTabChange('buy')}>
+                  Mua PRANA với Discount
+                </div>
+                <div className="bond-tab" id="sell-bond-tab" onClick={() => handleTabChange('sell')}>
+                  Bán PRANA với Premium
+                </div>
+              </div>
+              
+              <div className="bond-tab-content active" id="buy-bond-content">
+                <BuyBondForm />
+              </div>
+              
+              <div className="bond-tab-content" id="sell-bond-content">
+                <SellBondForm />
+              </div>
             </div>
             <div className="card">
               <ActiveBonds />
