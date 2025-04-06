@@ -1,10 +1,9 @@
 import React from 'react';
-import useBonding from '../hooks/useBonding';
-import { BOND_TERM_OPTIONS } from '../constants/bondingTerms'; // Import options
-// Giả sử bạn có hoặc điều chỉnh DurationSlider cho phù hợp với Bond Terms
+import useBuyBond from '../hooks/useBuyBond';
+import { BOND_TERMS } from '../constants/bondTerms';
 import DurationSlider from './DurationSlider';
 
-const BondingForm = () => {
+const BuyBondForm = () => {
     const {
         isConnected,
         inputType,
@@ -28,7 +27,7 @@ const BondingForm = () => {
         calculatedPranaForWbtc,
         calculatedWbtcForPrana,
         needsApproval,
-    } = useBonding();
+    } = useBuyBond();
 
     if (!isConnected) return <p>Vui lòng kết nối ví của bạn.</p>;
 
@@ -118,7 +117,7 @@ const BondingForm = () => {
                  <DurationSlider
                     selectedIndex={termIndex}
                     setSelectedIndex={setTermIndex}
-                    options={BOND_TERM_OPTIONS}
+                    options={BOND_TERMS}
                     valueMap={bondRates}
                     valueKey="rate"
                     valueLabelSuffix="% chiết khấu"
@@ -165,4 +164,4 @@ const BondingForm = () => {
     );
 };
 
-export default BondingForm;
+export default BuyBondForm;

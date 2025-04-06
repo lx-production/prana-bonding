@@ -4,7 +4,7 @@ import ConnectWallet from './components/ConnectWallet';
 import PranaBalance from './components/PranaBalance';
 import WbtcBalance from './components/WbtcBalance';
 import ThemeSwitcher from './components/ThemeSwitcher';
-import BondingForm from './components/BondingForm';
+import BuyBondForm from './components/BuyBondForm';
 import ActiveBonds from './components/ActiveBonds';
 import BuyBondBalance from './components/BuyBondBalance';
 import SellBondBalance from './components/SellBondBalance';
@@ -38,7 +38,7 @@ function App() {
               </div>
             </div>            
             <div className="card">
-              <BondingForm />
+              <BuyBondForm />
             </div>
             <div className="card">
               <ActiveBonds />

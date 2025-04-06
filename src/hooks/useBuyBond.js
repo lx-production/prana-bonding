@@ -3,14 +3,14 @@ import { useAccount, useReadContract, useWriteContract, usePublicClient } from '
 import { parseUnits, formatUnits } from 'viem';
 import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
-import { BOND_TERM_OPTIONS } from '../constants/bondingTerms';
+import { BOND_TERMS } from '../constants/bondTerms';
 
-const useBonding = () => {
+const useBuyBond = () => {
     const { address, isConnected } = useAccount();
     const [inputType, setInputType] = useState('WBTC');
     const [wbtcAmount, setWbtcAmount] = useState('');
     const [pranaAmount, setPranaAmount] = useState('');
-    const [termIndex, setTermIndex] = useState(1); // Index in BOND_TERM_OPTIONS
+    const [termIndex, setTermIndex] = useState(1); // Index in BOND_TERMS
     const [bondRates, setBondRates] = useState({}); // Lưu trữ tỷ lệ bond { termInSeconds: rate }
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -335,7 +335,7 @@ const useBonding = () => {
 
           // Create a map to store { rate, duration } keyed by term duration in seconds
           let ratesInfoMap = {};
-          const termOptions = BOND_TERM_OPTIONS; // Ensure this is defined correctly
+          const termOptions = BOND_TERMS; // Ensure this is defined correctly
 
           if (termEnums && rateValues && durationValues && termEnums.length === rateValues.length && termEnums.length === durationValues.length) {
             for (let i = 0; i < termEnums.length; i++) {
@@ -343,7 +343,7 @@ const useBonding = () => {
               const rate = BigInt(rateValues[i]); // Keep as BigInt (basis points)
               const duration = BigInt(durationValues[i]); // Keep as BigInt (seconds)
 
-              // Find the corresponding option in BOND_TERM_OPTIONS using the enum ID
+              // Find the corresponding option in BOND_TERMS using the enum ID
               const termOption = termOptions.find(option => option.id === termEnum);
 
               if (termOption) {
@@ -404,4 +404,4 @@ const useBonding = () => {
     };
 };
 
-export default useBonding;
+export default useBuyBond;
