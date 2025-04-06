@@ -1,7 +1,7 @@
-export const BOND_ADDRESS = '0xA3adf8952982Eac60C0E43d6F93C66E7363c6Fe2';
+export const BUY_BOND_ADDRESS = '0xA3adf8952982Eac60C0E43d6F93C66E7363c6Fe2';
 
 // Bond Contract ABI - Updated based on BuyPranaBond.json for UI needs
-export const BOND_ABI = [
+export const BUY_BOND_ABI = [
     // --- View Functions ---
     {
       "inputs": [],

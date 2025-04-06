@@ -1,17 +1,17 @@
 import React from 'react';
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { BOND_ADDRESS } from '../constants/bondingContracts'; // Use the Bond contract address
+import { BUY_BOND_ADDRESS } from '../constants/buyBondContract'; // Use the Bond contract address
 import { PRANA_ADDRESS, PRANA_ABI, PRANA_DECIMALS } from '../constants/sharedContracts'; // Use PRANA token details for balance check
 import { useCommittedPrana } from '../hooks/useCommittedPrana'; // Import the new hook
 
-const ContractBalance = () => {
-  // Fetch the balance of PRANA tokens held by the BOND_ADDRESS
+const BuyBondBalance = () => {
+  // Fetch the balance of PRANA tokens held by the BUY_BOND_ADDRESS
   const { data: balance, isLoading: isLoadingBalance, error: balanceError } = useReadContract({
     address: PRANA_ADDRESS, // Check balance on the PRANA token contract
     abi: PRANA_ABI,
     functionName: 'balanceOf',
-    args: [BOND_ADDRESS],
+    args: [BUY_BOND_ADDRESS],
   });
 
   // Fetch the committed PRANA value using the new hook
@@ -30,7 +30,7 @@ const ContractBalance = () => {
 
   return (
     <div className="balance-container">
-      <h3>Bond Contract PRANA</h3>
+      <h3>Buy Bond Contract Status</h3>
       {isLoading ? (
         <p>Loading details...</p>
       ) : error ? (
@@ -49,4 +49,4 @@ const ContractBalance = () => {
   );
 };
 
-export default ContractBalance;
+export default BuyBondBalance;

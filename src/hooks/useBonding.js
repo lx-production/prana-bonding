@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
-import { BOND_ADDRESS, BOND_ABI } from '../constants/bondingContracts';
+import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
 import { BOND_TERM_OPTIONS } from '../constants/bondingTerms';
 
@@ -42,7 +42,7 @@ const useBonding = () => {
         address: WBTC_ADDRESS,
         abi: WBTC_ABI,
         functionName: 'allowance',
-        args: [address, BOND_ADDRESS],
+        args: [address, BUY_BOND_ADDRESS],
         enabled: isConnected && !!address,
         watch: true, // Theo dõi thay đổi allowance
     });
@@ -50,8 +50,8 @@ const useBonding = () => {
 
     // Đọc Min Buy Amount (tính bằng PRANA)
     const { data: minBuyAmountData } = useReadContract({
-        address: BOND_ADDRESS,
-        abi: BOND_ABI,
+        address: BUY_BOND_ADDRESS,
+        abi: BUY_BOND_ABI,
         functionName: 'minPranaBuyAmount',
         enabled: isConnected,
     });
@@ -86,8 +86,8 @@ const useBonding = () => {
                     } else {
                         // Call the contract's calculatePranaAmount function directly
                         const calculatedPranaWei = await publicClient.readContract({
-                            address: BOND_ADDRESS,
-                            abi: BOND_ABI,
+                            address: BUY_BOND_ADDRESS,
+                            abi: BUY_BOND_ABI,
                             functionName: 'calculatePranaAmount',
                             args: [wbtcAmountWei, selectedTermEnum]
                         });
@@ -104,8 +104,8 @@ const useBonding = () => {
                     } else {
                         // Call the contract's calculateWbtcAmount function directly
                         const finalWbtcAmountWei = await publicClient.readContract({
-                            address: BOND_ADDRESS,
-                            abi: BOND_ABI,
+                            address: BUY_BOND_ADDRESS,
+                            abi: BUY_BOND_ABI,
                             functionName: 'calculateWbtcAmount',
                             args: [pranaAmountWei, selectedTermEnum]
                         });
@@ -176,7 +176,7 @@ const useBonding = () => {
                 address: WBTC_ADDRESS,
                 abi: WBTC_ABI,
                 functionName: 'approve',
-                args: [BOND_ADDRESS, amountToApprove],
+                args: [BUY_BOND_ADDRESS, amountToApprove],
             });
             setSuccess(`Phê duyệt thành công! Transaction: ${hash}. Vui lòng đợi giao dịch xác nhận.`);
             // Không reset form ở đây, chỉ thông báo
@@ -264,8 +264,8 @@ const useBonding = () => {
 
         try {
             const hash = await writeContractAsync({ // Lấy hash từ kết quả
-                address: BOND_ADDRESS,
-                abi: BOND_ABI,
+                address: BUY_BOND_ADDRESS,
+                abi: BUY_BOND_ABI,
                 functionName: functionToCall,
                 args: args,
             });
@@ -322,8 +322,8 @@ const useBonding = () => {
 
         try {
           const result = await publicClient.readContract({
-            address: BOND_ADDRESS,
-            abi: BOND_ABI,
+            address: BUY_BOND_ADDRESS,
+            abi: BUY_BOND_ABI,
             functionName: 'getAllBondRates'
           });
 
@@ -375,7 +375,7 @@ const useBonding = () => {
       }
 
       fetchRates();
-    }, [isConnected, publicClient, BOND_ADDRESS]);
+    }, [isConnected, publicClient, BUY_BOND_ADDRESS]);
 
     return {
         address,

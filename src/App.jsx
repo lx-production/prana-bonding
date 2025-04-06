@@ -6,7 +6,9 @@ import WbtcBalance from './components/WbtcBalance';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import BondingForm from './components/BondingForm';
 import ActiveBonds from './components/ActiveBonds';
-import ContractBalance from './components/ContractBalance';
+import BuyBondBalance from './components/BuyBondBalance';
+import SellBondBalance from './components/SellBondBalance';
+
 function App() {
   const { isConnected } = useAccount();
 
@@ -27,17 +29,14 @@ function App() {
       <main>        
         {isConnected ? (
           <div>
-            <div className="card">
-                <ContractBalance />
-              </div>
             <div className="balance-cards-container">
               <div className="card">
-                <PranaBalance />
+                <BuyBondBalance />
               </div>
               <div className="card">
-                <WbtcBalance />
+                <SellBondBalance />
               </div>
-            </div>
+            </div>            
             <div className="card">
               <BondingForm />
             </div>
@@ -61,8 +60,16 @@ function App() {
           rel="noopener noreferrer"
           className="footer-link"
         >
-          Bonding Contract
-        </a>        
+          Buy Bond Contract
+        </a>
+        <a
+          href="https://polygonscan.com/address/0x2A48215e134a9382e1eBAf96F2Fa47Ca1c2fa092"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footer-link"
+        >
+          Sell Bond Contract
+        </a>      
         <div className="footer-links">          
           <a 
             href="https://github.com/lx-production/prana-staking"

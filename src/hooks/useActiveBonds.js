@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useWriteContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { BOND_ADDRESS, BOND_ABI } from '../constants/bondingContracts';
+import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 import { PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/sharedContracts';
 
 /**
@@ -137,8 +137,8 @@ const useActiveBonds = (bondsData, refetchBonds) => {
       const claimableAmount = bond ? bond.claimablePranaFormatted : 'some';
 
       const txHash = await writeContractAsync({
-        address: BOND_ADDRESS, // Use actual address
-        abi: BOND_ABI,         // Use actual ABI
+        address: BUY_BOND_ADDRESS, // Use actual address
+        abi: BUY_BOND_ABI,         // Use actual ABI
         functionName: 'claimBond',
         args: [BigInt(bondId)] // Ensure bondId is passed as BigInt if required by ABI
       });

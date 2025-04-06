@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import useActiveBonds from '../hooks/useActiveBonds';
-import { BOND_ADDRESS, BOND_ABI } from '../constants/bondingContracts';
+import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 
 // Simple loading indicator
 const LoadingIndicator = () => <div>Loading bonds...</div>;
@@ -22,8 +22,8 @@ const ActiveBonds = () => {
     isLoading: isFetchingBonds,
     refetch: refetchBonds // Function to refetch bond data
   } = useReadContract({
-    address: BOND_ADDRESS,
-    abi: BOND_ABI,
+    address: BUY_BOND_ADDRESS,
+    abi: BUY_BOND_ABI,
     functionName: 'getUserActiveBonds',
     args: [address],
     enabled: isConnected && !!address,

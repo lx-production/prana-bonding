@@ -1,12 +1,12 @@
 import { useReadContract } from 'wagmi';
-import { BOND_ADDRESS, BOND_ABI } from '../constants/bondingContracts';
+import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 import { PRANA_DECIMALS } from '../constants/sharedContracts';
 import { formatUnits } from 'viem';
 
 export const useCommittedPrana = () => {
   const { data, isLoading, error, refetch } = useReadContract({
-    address: BOND_ADDRESS,
-    abi: BOND_ABI,
+    address: BUY_BOND_ADDRESS,
+    abi: BUY_BOND_ABI,
     functionName: 'committedPrana',
   });
 
