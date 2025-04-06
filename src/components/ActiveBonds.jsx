@@ -69,7 +69,10 @@ const ActiveBonds = () => {
           <div key={bond.id} className="bond-card"> {/* Reuse styling from staking if possible */}
             <div className="bond-header">
               <h3>Bond #{bond.id}</h3>
-              <span className={`status-badge status-${bond.status.toLowerCase()}`}>{bond.status}</span>
+              <div className="bond-badges"> {/* Container for badges */}
+                <span className={`status-badge status-${bond.status.toLowerCase()}`}>{bond.status}</span>
+                <span className="bond-type-badge">Buying</span> {/* New Buying badge */}
+              </div>
             </div>
 
             <div className="bond-info">

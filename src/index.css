@@ -799,9 +799,16 @@ button {
   border-bottom: 1px solid var(--border-color); /* Add separator */
 }
 
+/* Add a container for the badges to sit next to each other */
+.bond-badges {
+  display: flex;
+  gap: 0.5rem; /* Add some space between badges */
+}
+
 .bond-header h3 {
   font-size: 1.25rem; /* Adjust size as needed */
   color: var(--text-primary);
+  margin-bottom: 0; /* Remove margin since flex aligns items */
 }
 
 .status-badge {
@@ -810,6 +817,17 @@ button {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
+}
+
+/* New style for the 'Buying' badge */
+.bond-type-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: rgba(16, 185, 129, 0.1); /* Use success color background (greenish) */
+  color: var(--success-color); /* Use success color text */
 }
 
 /* Specific styles for each status */
