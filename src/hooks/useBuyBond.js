@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, usePublicClient, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
@@ -7,7 +7,7 @@ import { BOND_TERMS } from '../constants/bondTerms';
 
 const useBuyBond = () => {
     const { address, isConnected } = useAccount();
-    const [inputType, setInputType] = useState('WBTC');
+    const [inputType, setInputType] = useState('PRANA');
     const [wbtcAmount, setWbtcAmount] = useState('');
     const [pranaAmount, setPranaAmount] = useState('');
     const [termIndex, setTermIndex] = useState(1); // Index in BOND_TERMS
@@ -18,6 +18,8 @@ const useBuyBond = () => {
     const [isCalculating, setIsCalculating] = useState(false); // For price calculation
     const [calculatedPrana, setCalculatedPrana] = useState('0'); // Calculated PRANA for WBTC input
     const [calculatedWbtc, setCalculatedWbtc] = useState('0'); // Calculated WBTC for PRANA input
+    const [approveTxHash, setApproveTxHash] = useState(null); // State to store the tx hash
+    const [isWaitingForApprovalConfirmation, setIsWaitingForApprovalConfirmation] = useState(false);
 
     const { writeContractAsync, status: writeStatus } = useWriteContract();
     const publicClient = usePublicClient();
@@ -141,8 +143,8 @@ const useBuyBond = () => {
 
     // --- Cập nhật Loading State ---
     useEffect(() => {
-      setLoading(writeStatus === 'pending');
-    }, [writeStatus]);
+      setLoading(writeStatus === 'pending' || isWaitingForApprovalConfirmation);
+    }, [writeStatus, isWaitingForApprovalConfirmation]);
 
     // --- Reset messages ---
     useEffect(() => {
@@ -160,42 +162,56 @@ const useBuyBond = () => {
     const handleApprove = async () => {
         setError('');
         setSuccess('');
-        // Use calculated WBTC if PRANA is the input type, otherwise use direct WBTC input
-        const wbtcToApproveStr = inputType === 'PRANA' ? calculatedWbtc : wbtcAmount;
+        setApproveTxHash(null); // Reset previous hash
+        setIsWaitingForApprovalConfirmation(false); // Reset waiting state
 
+        const wbtcToApproveStr = inputType === 'PRANA' ? calculatedWbtc : wbtcAmount;
         if (!wbtcToApproveStr || isNaN(parseFloat(wbtcToApproveStr)) || parseFloat(wbtcToApproveStr) <= 0) {
             setError('Không thể xác định số lượng WBTC để phê duyệt.');
             return;
         }
-        setLoading(true);
+        // setLoading(true); // Loading is now handled by the useEffect
 
         const amountToApprove = parseUnits(wbtcToApproveStr, WBTC_DECIMALS);
 
         try {
-            const hash = await writeContractAsync({ // Lấy hash từ kết quả
+            const hash = await writeContractAsync({
                 address: WBTC_ADDRESS,
                 abi: WBTC_ABI,
                 functionName: 'approve',
                 args: [BUY_BOND_ADDRESS, amountToApprove],
             });
-            setSuccess(`Approve thành công! Transaction: ${hash}.`);
-            // Không reset form ở đây, chỉ thông báo
-            // refetchAllowance sẽ tự động cập nhật khi watch=true hoặc có thể gọi thủ công nếu cần
-            refetchAllowance(); // Chủ động gọi lại fetch allowance
+            setApproveTxHash(hash); // Store the hash
+            setIsWaitingForApprovalConfirmation(true); // Start waiting
+            setSuccess(`Approve transaction ${hash} sent. Waiting for confirmation...`);
+
+            // Wait for the transaction receipt
+            const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+            setIsWaitingForApprovalConfirmation(false); // Stop waiting
+
+            if (receipt.status === 'success') {
+                setSuccess(`Approve transaction ${hash} confirmed! Allowance updated.`);
+                refetchAllowance(); // Refetch AFTER confirmation
+            } else {
+                console.error("Approve transaction failed:", receipt);
+                setError(`Approve transaction ${hash} failed. Status: ${receipt.status}`);
+            }
+
         } catch (err) {
             console.error("Approve error:", err);
-            // Xử lý lỗi tương tự useStaking.js
-            let errorMsg = 'Approve thất bại';
-             if (err.message?.includes('rejected') || err.message?.includes('denied')) {
-               errorMsg = 'Yêu cầu phê duyệt bị từ chối';
-             } else if (err.message?.includes('insufficient funds')) {
-               errorMsg = 'Không đủ gas để thực hiện giao dịch';
-             } else {
-               errorMsg = `Approve thất bại: ${err.shortMessage || err.message || 'Lỗi không xác định'}`;
-             }
+            setIsWaitingForApprovalConfirmation(false); // Ensure waiting state is reset on error
+            let errorMsg = 'Approve failed';
+            if (err.message?.includes('rejected') || err.message?.includes('denied')) {
+                errorMsg = 'Approval request rejected';
+            } else if (err.message?.includes('insufficient funds')) {
+                errorMsg = 'Insufficient funds for gas';
+            } else {
+                errorMsg = `Approve failed: ${err.shortMessage || err.message || 'Unknown error'}`;
+            }
             setError(errorMsg);
         } finally {
-            setLoading(false); // Kết thúc loading
+           // setLoading(false); // Loading is handled by the useEffect
         }
     };
 
@@ -377,6 +393,9 @@ const useBuyBond = () => {
       fetchRates();
     }, [isConnected, publicClient, BUY_BOND_ADDRESS]);
 
+    // Optionally adjust the overall loading state if needed
+    const isLoading = loading; // Or customize further if needed
+
     return {
         address,
         isConnected,
@@ -391,7 +410,7 @@ const useBuyBond = () => {
         bondRates,
         error,
         success,
-        loading,
+        loading: isLoading, // Use the derived loading state
         isCalculating,
         writeStatus,
         handleApprove,
@@ -401,6 +420,10 @@ const useBuyBond = () => {
         needsApproval,
         calculatedPranaForWbtc: calculatedPrana,
         calculatedWbtcForPrana: calculatedWbtc,
+        approveTxHash,
+        isWaitingForApprovalConfirmation,
+        isValidWbtcInput,
+        isValidPranaInput,
     };
 };
 

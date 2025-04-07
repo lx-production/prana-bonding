@@ -19,7 +19,6 @@ const BuyBondForm = () => {
         success,
         isLoading,
         isCalculating,
-        writeStatus,
         handleApprove,
         handleBuyBond,
         wbtcBalance,
@@ -27,9 +26,16 @@ const BuyBondForm = () => {
         calculatedPranaForWbtc,
         calculatedWbtcForPrana,
         needsApproval,
+        isWaitingForApprovalConfirmation,
+        isValidWbtcInput,
+        isValidPranaInput,
+        // approveTxHash,
     } = useBuyBond();
 
     if (!isConnected) return <p>Vui lòng kết nối ví của bạn.</p>;
+
+    // Determine if any critical operation is in progress
+    const isOperationInProgress = isLoading || isCalculating;
 
     const handleInputChange = (e, type) => {
         const value = e.target.value;
@@ -133,24 +139,32 @@ const BuyBondForm = () => {
                 <button
                     className="btn-secondary"
                     onClick={handleApprove}
-                    // disabled={isApproveDisabled}
+                    disabled={isOperationInProgress || !needsApproval}
                 >
-                    {isLoading && writeStatus === 'pending' ? (
-                        <><span className="spinner">↻</span>Approving...</>
+                    {/* More specific loading states for Approve button */}
+                    {isWaitingForApprovalConfirmation ? (
+                        <><span className="spinner">↻</span>Confirming...</>
+                    ) : isLoading && !isCalculating ? ( // Check if loading is specifically for approve tx sending
+                        <><span className="spinner">↻</span>Sending Approve...</>
                     ) : (
-                        // Use the validated wbtcToApprove and format it
-                            `Approve WBTC`
+                        'Approve WBTC'
                     )}
                 </button>
 
                 <button
                     className="btn-primary"
                     onClick={handleBuyBond}
-                    // Combine all disable conditions
-                    disabled={needsApproval || (isLoading && writeStatus === 'pending') || isCalculating}
+                    disabled={
+                        needsApproval ||
+                        isOperationInProgress ||
+                        !( // Disable if the relevant input is NOT valid
+                            (inputType === 'WBTC' && isValidWbtcInput) ||
+                            (inputType === 'PRANA' && isValidPranaInput)
+                        )
+                    }
                 >
-                    {(isLoading && writeStatus === 'pending') || isCalculating ? (
-                        <><span className="spinner">↻</span>{isCalculating ? 'Calculating...' : 'Buying Bond...'}</>
+                    {isOperationInProgress ? (
+                        <><span className="spinner">↻</span>{isCalculating ? 'Calculating...' : 'Processing...'}</>
                     ) : (
                          needsApproval ? 'Approval Required' : 'Buy Bond'
                     )}
