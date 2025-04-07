@@ -82,7 +82,7 @@ const useActiveSellBonds = (bondsData, refetchBonds) => {
 
 
   // Process bonds data
-  const processedBonds = useMemo(() => {
+  const processedSellBonds = useMemo(() => {
     if (!bondsData) return [];
     return bondsData.map((bond) => {
       const now = currentTime;
@@ -126,14 +126,14 @@ const useActiveSellBonds = (bondsData, refetchBonds) => {
   }, [error, success]);
 
   // Handle claim bond
-  const handleClaimBond = async (bondId) => {
+  const handleSellClaim = async (bondId) => {
     try {
       setActionLoading({ bondId, action: 'claim' });
       setError('');
       setSuccess('');
 
       // Find the bond to potentially display info in success/error message
-      const bond = processedBonds.find(b => b.id === bondId);
+      const bond = processedSellBonds.find(b => b.id === bondId);
       const claimableAmount = bond ? bond.claimableWbtcFormatted : 'some'; // Use claimableWbtcFormatted
 
       const txHash = await writeContractAsync({
@@ -167,8 +167,8 @@ const useActiveSellBonds = (bondsData, refetchBonds) => {
   };
 
   return {
-    processedBonds,
-    handleClaimBond,
+    processedSellBonds,
+    handleSellClaim,
     actionLoading,
     error,
     success,

@@ -7,10 +7,10 @@ import { PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/sharedContracts';
 /**
  * Custom hook for bond-related actions based on BuyPranaBond contract
  * @param {Array} bondsData - Raw bonds data from the contract (e.g., from getUserActiveBonds)
- * @param {function} refetchBonds - Function to refetch bonds after an action
+ * @param {function} refetchBuyBonds - Function to refetch bonds after an action
  * @returns {object} - Contains action functions and processed bond states
  */
-const useActiveBuyBonds = (bondsData, refetchBonds) => {
+const useActiveBuyBonds = (bondsData, refetchBuyBonds) => {
   const { writeContractAsync } = useWriteContract();
   const [actionLoading, setActionLoading] = useState({ bondId: null, action: null });
   const [error, setError] = useState('');
@@ -82,7 +82,7 @@ const useActiveBuyBonds = (bondsData, refetchBonds) => {
 
 
   // Process bonds data
-  const processedBonds = useMemo(() => {
+  const processedBuyBonds = useMemo(() => {
     if (!bondsData) return [];
     return bondsData.map((bond) => {
       const now = currentTime;
@@ -126,14 +126,14 @@ const useActiveBuyBonds = (bondsData, refetchBonds) => {
   }, [error, success]);
 
   // Handle claim bond
-  const handleClaimBond = async (bondId) => {
+  const handleBuyClaim = async (bondId) => {
     try {
       setActionLoading({ bondId, action: 'claim' });
       setError('');
       setSuccess('');
 
       // Find the bond to potentially display info in success/error message
-      const bond = processedBonds.find(b => b.id === bondId);
+      const bond = processedBuyBonds.find(b => b.id === bondId);
       const claimableAmount = bond ? bond.claimablePranaFormatted : 'some';
 
       const txHash = await writeContractAsync({
@@ -145,8 +145,8 @@ const useActiveBuyBonds = (bondsData, refetchBonds) => {
 
       setSuccess(`Successfully sent claim transaction for bond #${bondId} (${claimableAmount} PRANA). Tx: ${txHash}. Giao dịch claim bond #${bondId} (${claimableAmount} PRANA) đã gửi thành công.`);
       // Optimistically update or wait for refetch? Let's refetch for consistency.
-      if (refetchBonds) {
-        setTimeout(refetchBonds, 1000); // Give RPC a moment before refetching
+      if (refetchBuyBonds) {
+        setTimeout(refetchBuyBonds, 1000); // Give RPC a moment before refetching
       }
     } catch (err) {
       console.error('Claim bond error:', err);
@@ -167,8 +167,8 @@ const useActiveBuyBonds = (bondsData, refetchBonds) => {
   };
 
   return {
-    processedBonds,
-    handleClaimBond,
+    processedBuyBonds,
+    handleBuyClaim,
     actionLoading,
     error,
     success,

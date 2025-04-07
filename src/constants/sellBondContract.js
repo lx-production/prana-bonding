@@ -77,12 +77,12 @@ export const SELL_BOND_ABI = [
             },
             {
               "internalType": "uint256",
-              "name": "wbtcAmount",
+              "name": "pranaAmount",
               "type": "uint256"
             },
             {
               "internalType": "uint256",
-              "name": "pranaAmount",
+              "name": "wbtcAmount",
               "type": "uint256"
             },
             {

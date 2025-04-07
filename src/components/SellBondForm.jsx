@@ -61,7 +61,7 @@ const SellBondForm = () => {
                         type="text"
                         value={pranaAmount}
                         onChange={handleInputChange}
-                        placeholder={`Tối thiểu: ${minPranaSellAmountFormatted} PRANA | Số dư: ${Number(pranaBalance).toFixed(PRANA_DECIMALS)}`}
+                        placeholder={`Tối thiểu: ${minPranaSellAmountFormatted} PRANA`}
                         disabled={isInputDisabled}
                         className="form-input"
                     />

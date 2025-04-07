@@ -830,6 +830,12 @@ button {
   color: var(--success-color); /* Use success color text */
 }
 
+/* Style for the 'SELLING' type badge */
+.bond-type-badge.type-sell {
+  background-color: rgba(239, 68, 68, 0.1); /* Use danger color background (reddish) */
+  color: var(--danger-color); /* Use danger color text */
+}
+
 /* Specific styles for each status */
 .status-vesting {
   background-color: rgba(251, 146, 60, 0.1); /* Example: Orange-ish for vesting */
