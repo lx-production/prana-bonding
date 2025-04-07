@@ -1,16 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useWriteContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
+import { SELL_BOND_ADDRESS, SELL_BOND_ABI } from '../constants/sellBondContract';
 import { PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/sharedContracts';
 
 /**
- * Custom hook for bond-related actions based on BuyPranaBond contract
+ * Custom hook for bond-related actions based on SellPranaBond contract
  * @param {Array} bondsData - Raw bonds data from the contract (e.g., from getUserActiveBonds)
  * @param {function} refetchBonds - Function to refetch bonds after an action
  * @returns {object} - Contains action functions and processed bond states
  */
-const useActiveBonds = (bondsData, refetchBonds) => {
+const useActiveSellBonds = (bondsData, refetchBonds) => {
   const { writeContractAsync } = useWriteContract();
   const [actionLoading, setActionLoading] = useState({ bondId: null, action: null });
   const [error, setError] = useState('');
@@ -39,13 +39,13 @@ const useActiveBonds = (bondsData, refetchBonds) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Helper function to calculate claimable PRANA based on contract logic
-  const calculateClaimablePrana = (bond, now) => {
+  // Helper function to calculate claimable WBTC based on contract logic
+  const calculateClaimableWbtc = (bond, now) => { // Renamed function and updated logic for WBTC
       const currentTimeBigInt = BigInt(now);
       const creationTime = BigInt(bond.creationTime);
       const maturityTime = BigInt(bond.maturityTime);
-      const pranaAmount = BigInt(bond.pranaAmount);
-      const claimedPrana = BigInt(bond.claimedPrana);
+      const wbtcAmount = BigInt(bond.wbtcAmount); // Use wbtcAmount
+      const claimedWbtc = BigInt(bond.claimedWbtc); // Use claimedWbtc
       const lastClaimTime = BigInt(bond.lastClaimTime);
 
       // Cannot claim if already fully claimed or no time has passed since last claim
@@ -53,11 +53,11 @@ const useActiveBonds = (bondsData, refetchBonds) => {
           return BigInt(0);
       }
 
-      let totalReleasablePrana;
+      let totalReleasableWbtc; // Renamed variable
 
       if (currentTimeBigInt >= maturityTime) {
           // Mature bond: Total releasable is the full amount
-          totalReleasablePrana = pranaAmount;
+          totalReleasableWbtc = wbtcAmount;
       } else {
           // Vesting bond: Calculate linearly vested amount
           const totalVestingDuration = maturityTime - creationTime;
@@ -67,17 +67,17 @@ const useActiveBonds = (bondsData, refetchBonds) => {
               return BigInt(0); // Avoid division by zero or negative time
           }
 
-          // Mimic FullMath.mulDiv: (pranaAmount * elapsedSinceCreation) / totalVestingDuration
+          // Mimic FullMath.mulDiv: (wbtcAmount * elapsedSinceCreation) / totalVestingDuration
           // Use BigInt division for precision
-          totalReleasablePrana = (pranaAmount * elapsedSinceCreation) / totalVestingDuration;
+          totalReleasableWbtc = (wbtcAmount * elapsedSinceCreation) / totalVestingDuration;
       }
 
       // Claimable now is the difference between total releasable and what's already claimed
-      const potentiallyClaimable = totalReleasablePrana > claimedPrana ? totalReleasablePrana - claimedPrana : BigInt(0);
+      const potentiallyClaimable = totalReleasableWbtc > claimedWbtc ? totalReleasableWbtc - claimedWbtc : BigInt(0);
 
       // Ensure we don't calculate more than the remaining total amount
-      const remainingPrana = pranaAmount - claimedPrana;
-      return potentiallyClaimable < remainingPrana ? potentiallyClaimable : remainingPrana;
+      const remainingWbtc = wbtcAmount - claimedWbtc; // Renamed variable
+      return potentiallyClaimable < remainingWbtc ? potentiallyClaimable : remainingWbtc;
   };
 
 
@@ -90,15 +90,15 @@ const useActiveBonds = (bondsData, refetchBonds) => {
       const maturityTimeNum = Number(bond.maturityTime);
       const duration = maturityTimeNum - creationTimeNum;
       const isMature = now >= maturityTimeNum;
-      const claimablePranaRaw = calculateClaimablePrana(bond, now);
-      const canClaim = !bond.claimed && claimablePranaRaw > 0; // Can claim if not fully claimed and there's a non-zero amount claimable
+      const claimableWbtcRaw = calculateClaimableWbtc(bond, now); // Updated function call and variable name
+      const canClaim = !bond.claimed && claimableWbtcRaw > 0; // Can claim if not fully claimed and there's a non-zero amount claimable
 
       return {
         ...bond,
         id: Number(bond.id), // Convert BigInt ID to number for easier handling in React keys
-        wbtcAmountFormatted: formatUnits(bond.wbtcAmount, WBTC_DECIMALS),
-        pranaAmountFormatted: formatUnits(bond.pranaAmount, PRANA_DECIMALS),
-        claimedPranaFormatted: formatUnits(bond.claimedPrana, PRANA_DECIMALS),
+        pranaAmountFormatted: formatUnits(bond.pranaAmount, PRANA_DECIMALS), // Keep PRANA formatting for display
+        wbtcAmountFormatted: formatUnits(bond.wbtcAmount, WBTC_DECIMALS), // Keep WBTC formatting for display
+        claimedWbtcFormatted: formatUnits(bond.claimedWbtc, WBTC_DECIMALS), // Format claimed WBTC
         creationTimeFormatted: formatVietnamTime(creationTimeNum),
         maturityTimeFormatted: formatVietnamTime(maturityTimeNum),
         isMature,
@@ -106,8 +106,8 @@ const useActiveBonds = (bondsData, refetchBonds) => {
             100,
             Math.floor(((now - creationTimeNum) / duration) * 100)
         ) : (isMature ? 100 : 0),
-        claimablePranaRaw: claimablePranaRaw, // Keep raw BigInt for potential use
-        claimablePranaFormatted: formatUnits(claimablePranaRaw, PRANA_DECIMALS),
+        claimableWbtcRaw: claimableWbtcRaw, // Keep raw BigInt for potential use - Renamed
+        claimableWbtcFormatted: formatUnits(claimableWbtcRaw, WBTC_DECIMALS), // Format claimable WBTC - Renamed and updated decimals
         canClaim: canClaim,
         status: bond.claimed ? 'Claimed' : (isMature ? 'Mature' : 'Vesting'),
       };
@@ -134,16 +134,16 @@ const useActiveBonds = (bondsData, refetchBonds) => {
 
       // Find the bond to potentially display info in success/error message
       const bond = processedBonds.find(b => b.id === bondId);
-      const claimableAmount = bond ? bond.claimablePranaFormatted : 'some';
+      const claimableAmount = bond ? bond.claimableWbtcFormatted : 'some'; // Use claimableWbtcFormatted
 
       const txHash = await writeContractAsync({
-        address: BUY_BOND_ADDRESS, // Use actual address
-        abi: BUY_BOND_ABI,         // Use actual ABI
+        address: SELL_BOND_ADDRESS, // Use sell bond address
+        abi: SELL_BOND_ABI,         // Use sell bond ABI
         functionName: 'claimBond',
         args: [BigInt(bondId)] // Ensure bondId is passed as BigInt if required by ABI
       });
 
-      setSuccess(`Successfully sent claim transaction for bond #${bondId} (${claimableAmount} PRANA). Tx: ${txHash}. Giao dịch claim bond #${bondId} (${claimableAmount} PRANA) đã gửi thành công.`);
+      setSuccess(`Successfully sent claim transaction for bond #${bondId} (${claimableAmount} WBTC). Tx: ${txHash}. Giao dịch claim bond #${bondId} (${claimableAmount} WBTC) đã gửi thành công.`); // Updated message for WBTC
       // Optimistically update or wait for refetch? Let's refetch for consistency.
       if (refetchBonds) {
         setTimeout(refetchBonds, 1000); // Give RPC a moment before refetching
@@ -158,7 +158,7 @@ const useActiveBonds = (bondsData, refetchBonds) => {
       } else if (message.includes("Bond fully claimed")) {
           message = "This bond has already been fully claimed.";
       } else if (message.includes("No new amount to claim")) {
-          message = "No additional PRANA is available to claim at this time.";
+          message = "No additional WBTC is available to claim at this time."; // Updated message for WBTC
       }
       setError(`Failed to claim bond #${bondId}: ${message}`);
     } finally {
@@ -177,4 +177,4 @@ const useActiveBonds = (bondsData, refetchBonds) => {
   };
 };
 
-export default useActiveBonds;
+export default useActiveSellBonds; // Updated export

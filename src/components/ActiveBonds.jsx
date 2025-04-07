@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAccount, useReadContract } from 'wagmi';
-import useActiveBonds from '../hooks/useActiveBonds';
+import useActiveBuyBonds from '../hooks/useActiveBuyBonds';
 import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 
 // Simple loading indicator
@@ -36,7 +36,7 @@ const ActiveBonds = () => {
     actionLoading,
     error: actionError,
     success: actionSuccess,
-  } = useActiveBonds(activeBondsData, refetchBonds);
+  } = useActiveBuyBonds(activeBondsData, refetchBonds);
 
   // Display loading indicator while fetching
   if (isFetchingBonds) {

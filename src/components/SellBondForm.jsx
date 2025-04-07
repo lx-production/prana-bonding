@@ -100,7 +100,7 @@ const SellBondForm = () => {
                     {loading && writeStatus === 'pending' ? (
                         <><span className="spinner">↻</span>Approving...</>
                     ) : (
-                        `Approve ${pranaToApprove ? Number(pranaToApprove).toFixed(PRANA_DECIMALS) : '0'} PRANA`
+                        `Approve PRANA`
                     )}
                 </button>
 

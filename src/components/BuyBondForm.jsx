@@ -139,7 +139,7 @@ const BuyBondForm = () => {
                         <><span className="spinner">↻</span>Approving...</>
                     ) : (
                         // Use the validated wbtcToApprove and format it
-                            `Approve ${wbtcToApprove ? Number(wbtcToApprove).toFixed(8) : '0.00000000'} WBTC`
+                            `Approve WBTC`
                     )}
                 </button>
 
