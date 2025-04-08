@@ -105,7 +105,7 @@ function App() {
         </a>      
         <div className="footer-links">          
           <a 
-            href="https://github.com/lx-production/prana-staking"
+            href="https://github.com/lx-production/prana-bonding"
             target="_blank"
             rel="noopener noreferrer"
             className="footer-github"
