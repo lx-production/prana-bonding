@@ -56,3 +56,39 @@ Then edit `.env` with your configuration.
 ## Development
 
 The project is structured as follows:
+
+src/
+├── assets/ # Static assets
+├── components/ # React components
+├── constants/ # Constants and configuration
+├── context/ # React Context providers
+├── hooks/ # Custom React hooks
+├── utils/ # Utility functions
+├── App.jsx # Main application component
+└── main.jsx # Application entry point
+
+
+## Smart Contracts
+
+Smart contracts for buying and selling PRANA bonds can be found in the `contracts/` directory (e.g., `BuyPranaBond.sol`, `SellPranaBond.sol`). Make sure to deploy and configure the contract addresses in your environment variables.
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+Smart contracts Author: prana@triethocduongpho
+MIT license.
+
+## Contact
+
+PRANA Protocol - [thdp@triethocduongpho.net]
+
+---
+
+PRANA Protocol
