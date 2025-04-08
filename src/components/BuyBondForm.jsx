@@ -69,7 +69,6 @@ const BuyBondForm = () => {
         : `${Number(calculatedWbtcForPrana).toFixed(8)} WBTC`; // Use 8 decimals for WBTC
 
     const isInputDisabled = isLoading || isCalculating;
-    const wbtcToApprove = inputType === 'PRANA' ? calculatedWbtcForPrana : wbtcAmount;
 
     return (
         <div className="bonding-form" key="bonding-form">
@@ -147,7 +146,7 @@ const BuyBondForm = () => {
                     ) : isLoading && !isCalculating ? ( // Check if loading is specifically for approve tx sending
                         <><span className="spinner">↻</span>Sending Approve...</>
                     ) : (
-                        'Approve WBTC'
+                        '1. Approve WBTC'
                     )}
                 </button>
 
@@ -166,7 +165,7 @@ const BuyBondForm = () => {
                     {isOperationInProgress ? (
                         <><span className="spinner">↻</span>{isCalculating ? 'Calculating...' : 'Processing...'}</>
                     ) : (
-                         needsApproval ? 'Approval Required' : 'Buy Bond'
+                         needsApproval ? 'Approval Required' : '2. Buy Bond'
                     )}
                 </button>
             </div>

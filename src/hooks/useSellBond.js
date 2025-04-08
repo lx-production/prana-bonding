@@ -15,6 +15,8 @@ const useSellBond = () => {
     const [loading, setLoading] = useState(false);
     const [isCalculating, setIsCalculating] = useState(false);
     const [calculatedWbtc, setCalculatedWbtc] = useState('0'); // Calculated WBTC user will receive
+    const [approveTxHash, setApproveTxHash] = useState(null);
+    const [isWaitingForApprovalConfirmation, setIsWaitingForApprovalConfirmation] = useState(false);
 
     const { writeContractAsync, status: writeStatus } = useWriteContract();
     const publicClient = usePublicClient();
@@ -108,8 +110,8 @@ const useSellBond = () => {
 
     // --- Loading State ---
     useEffect(() => {
-      setLoading(writeStatus === 'pending');
-    }, [writeStatus]);
+      setLoading(writeStatus === 'pending' || isWaitingForApprovalConfirmation);
+    }, [writeStatus, isWaitingForApprovalConfirmation]);
 
     // --- Reset messages ---
     useEffect(() => {
@@ -127,12 +129,13 @@ const useSellBond = () => {
     const handleApprove = async () => {
         setError('');
         setSuccess('');
+        setApproveTxHash(null);
+        setIsWaitingForApprovalConfirmation(false);
 
         if (!isValidPranaInput) {
             setError('Vui lòng nhập số lượng PRANA hợp lệ để phê duyệt.');
             return;
         }
-        setLoading(true);
 
         const amountToApprove = parseUnits(pranaAmount, PRANA_DECIMALS);
 
@@ -143,10 +146,24 @@ const useSellBond = () => {
                 functionName: 'approve',
                 args: [SELL_BOND_ADDRESS, amountToApprove],
             });
-            setSuccess(`Approve thành công! Transaction: ${hash}.`);
-            refetchAllowance(); // Refetch allowance after successful approval
+            setApproveTxHash(hash);
+            setIsWaitingForApprovalConfirmation(true);
+            setSuccess(`Approve transaction ${hash} sent. Waiting for confirmation...`);
+
+            const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+            setIsWaitingForApprovalConfirmation(false);
+
+            if (receipt.status === 'success') {
+                setSuccess(`Approve transaction ${hash} confirmed! Allowance updated.`);
+                refetchAllowance();
+            } else {
+                console.error("Approve PRANA transaction failed:", receipt);
+                setError(`Approve transaction ${hash} failed. Status: ${receipt.status}`);
+            }
         } catch (err) {
             console.error("Approve PRANA error:", err);
+            setIsWaitingForApprovalConfirmation(false);
             let errorMsg = 'Approve PRANA thất bại';
              if (err.message?.includes('rejected') || err.message?.includes('denied')) {
                errorMsg = 'Yêu cầu approve bị từ chối';
@@ -156,8 +173,6 @@ const useSellBond = () => {
                errorMsg = `Approve PRANA thất bại: ${err.shortMessage || err.message || 'Lỗi không xác định'}`;
              }
             setError(errorMsg);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -281,6 +296,8 @@ const useSellBond = () => {
       fetchRates();
     }, [isConnected, publicClient]);
 
+    const isLoading = loading;
+
     return {
         address,
         isConnected,
@@ -291,7 +308,7 @@ const useSellBond = () => {
         bondRates,
         error,
         success,
-        loading,
+        loading: isLoading,
         isCalculating,
         writeStatus,
         handleApprove,
@@ -300,6 +317,9 @@ const useSellBond = () => {
         minPranaSellAmountFormatted,
         needsApproval,
         calculatedWbtc,
+        approveTxHash,
+        isWaitingForApprovalConfirmation,
+        isValidPranaInput,
     };
 };
 
