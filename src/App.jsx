@@ -44,17 +44,17 @@ function App() {
         <ThemeSwitcher />
       </div>  
 
-      <main>        
+      <main>   
+      <div className="balance-cards-container">
+        <div className="card">
+          <BuyBondBalance />
+        </div>
+        <div className="card">
+          <SellBondBalance />
+        </div>
+      </div>      
         {isConnected ? (
-          <div>
-            <div className="balance-cards-container">
-              <div className="card">
-                <BuyBondBalance />
-              </div>
-              <div className="card">
-                <SellBondBalance />
-              </div>
-            </div>            
+          <div>                       
             <div className="card bond-card-container">
               <div className="bond-tabs">
                 <div className="bond-tab active" id="buy-bond-tab" onClick={() => handleTabChange('buy')}>
