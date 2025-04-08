@@ -24,10 +24,8 @@ const SellBondForm = () => {
         minPranaSellAmountFormatted,
         needsApproval,
         calculatedWbtc,
-        // Import the new state variables
         isWaitingForApprovalConfirmation,
         isValidPranaInput,
-        // approveTxHash, // Import if needed for display
     } = useSellBond();
 
     if (!isConnected) return <p>Vui lòng kết nối ví của bạn.</p>;
@@ -86,9 +84,9 @@ const SellBondForm = () => {
                     selectedIndex={termIndex}
                     setSelectedIndex={setTermIndex}
                     options={BOND_TERMS}
-                    valueMap={bondRates} // Sell bond rates provide the premium rate
-                    valueKey="rate" // The 'rate' field in sell bondRates represents the premium
-                    valueLabelSuffix="% premium" // Label indicating it's a premium
+                    valueMap={bondRates}
+                    valueKey="rate"
+                    valueLabelSuffix="% premium"
                     disabled={isInputDisabled}
                     labelId="sell-term-label"
                 />
@@ -101,8 +99,7 @@ const SellBondForm = () => {
                 <button
                     className="btn-secondary"
                     onClick={handleApprove}
-                    // Disable if an operation is in progress OR if approval isn't needed
-                    disabled={isOperationInProgress || !needsApproval || !isValidPranaInput} // Also disable if input is invalid
+                    disabled={isOperationInProgress || !needsApproval || !isValidPranaInput}
                 >
                     {/* More specific loading states for Approve button */}
                     {isWaitingForApprovalConfirmation ? (
@@ -117,11 +114,10 @@ const SellBondForm = () => {
                 <button
                     className="btn-primary"
                     onClick={handleSellBond}
-                    // Update the disabled condition
                     disabled={
                         needsApproval ||
                         isOperationInProgress ||
-                        !isValidPranaInput // Disable if input is not valid
+                        !isValidPranaInput
                     }
                 >
                     {isOperationInProgress ? (

@@ -1,14 +1,15 @@
-# PRANA Staking - Heo Đất PRANA 3.0
+# PRANA Bonding - OTC Trade with THĐP
 
-A decentralized staking platform for the PRANA Protocol, allowing users to stake their PRANA tokens and earn rewards.
+A decentralized bonding platform for the PRANA Protocol, allowing users to buy and sell PRANA bonds directly with PRANA Protocol from THĐP.
 
 ## Features
 
 - Wallet Connection: Seamless integration with Web3 wallets
-- PRANA Token Balance Display
-- Staking Functionality
-- Active Stakes Management
-- Real-time Contract Balance Information
+- Bond Purchase Functionality (Buy Bonds with WBTC)
+- Bond Selling Functionality (Sell Bonds for WBTC)
+- Bond Market Information (Pricing, Vesting terms and interest)
+- Active Bonds Management (Claiming vested tokens)
+- Real-time Contract Information
 - Bilingual Support (English/Vietnamese)
 
 ## Tech Stack
@@ -31,7 +32,7 @@ A decentralized staking platform for the PRANA Protocol, allowing users to stake
 1. Clone the repository:
 ```bash
 git clone [repository-url]
-cd prana-staking
+cd prana-bonding
 ```
 
 2. Install dependencies:
@@ -55,38 +56,3 @@ Then edit `.env` with your configuration.
 ## Development
 
 The project is structured as follows:
-
-```
-src/
-├── assets/        # Static assets
-├── components/    # React components
-├── constants/     # Constants and configuration
-├── hooks/         # Custom React hooks
-├── App.jsx        # Main application component
-└── main.jsx      # Application entry point
-```
-
-## Smart Contracts
-
-Smart contract related files can be found in the `contracts/` directory. Make sure to deploy and configure the contract addresses in your environment variables.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-Smart contracts Author: prana@triethocduongpho
-MIT license.
-
-## Contact
-
-PRANA Protocol - [thdp@triethocduongpho.net]
-
----
-
-PRANA Protocol
