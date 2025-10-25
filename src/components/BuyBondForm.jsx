@@ -1,4 +1,3 @@
-import React from 'react';
 import useBuyBond from '../hooks/useBuyBond';
 import { BOND_TERMS } from '../constants/bondTerms';
 import DurationSlider from './DurationSlider';

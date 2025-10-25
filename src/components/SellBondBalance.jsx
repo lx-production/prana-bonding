@@ -1,4 +1,3 @@
-import React from 'react';
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
 import {
@@ -27,12 +26,12 @@ const SellBondBalance = () => {
   });
 
   // Fetch the committed PRANA value using the new hook
-  const { committedWbtc: committedWbtcV2, committedWbtcRaw: committedWbtcRawV2, isLoading: isLoadingCommittedV2, error: committedErrorV2 } = useCommittedWbtc({
+  const { committedWbtcRaw: committedWbtcRawV2, isLoading: isLoadingCommittedV2, error: committedErrorV2 } = useCommittedWbtc({
     contractAddress: SELL_BOND_ADDRESS_V2,
     contractAbi: SELL_BOND_ABI_V2,
   });
 
-  const { committedWbtc: committedWbtcV1, committedWbtcRaw: committedWbtcRawV1, isLoading: isLoadingCommittedV1, error: committedErrorV1 } = useCommittedWbtc({
+  const { committedWbtcRaw: committedWbtcRawV1, isLoading: isLoadingCommittedV1, error: committedErrorV1 } = useCommittedWbtc({
     contractAddress: SELL_BOND_ADDRESS_V1,
     contractAbi: SELL_BOND_ABI_V1,
   });

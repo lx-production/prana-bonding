@@ -1,18 +1,9 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-
-const ThemeContext = createContext();
+import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import ThemeContext from './ThemeContextObject';
+import getInitialTheme from './getInitialTheme';
 
 export const ThemeProvider = ({ children }) => {
-  // Check if user has a saved preference, otherwise use system preference
-  const getInitialTheme = () => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme;
-    }
-    // Check for system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  };
-
   const [theme, setTheme] = useState(getInitialTheme);
 
   // Update theme and save to localStorage when it changes
@@ -33,11 +24,6 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the theme context
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-}; 
+ThemeProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};

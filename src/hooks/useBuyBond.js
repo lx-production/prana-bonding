@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useAccount, useReadContract, useWriteContract, usePublicClient, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
@@ -329,7 +329,7 @@ const useBuyBond = () => {
         }
         // Ensure allowance is also a BigInt for comparison
         return isConnected && requiredWbtcWei > 0n && requiredWbtcWei > wbtcAllowance;
-    }, [inputType, wbtcAmount, pranaAmount, calculatedWbtc, wbtcAllowance, isConnected, isValidWbtcInput, isValidPranaInput]);
+    }, [inputType, wbtcAmount, calculatedWbtc, wbtcAllowance, isConnected, isValidWbtcInput, isValidPranaInput]);
 
     // Đọc tất cả Bond Rates cho V2 bằng cách gọi bondRates(enum)
     useEffect(() => {
@@ -360,7 +360,7 @@ const useBuyBond = () => {
       }
 
       fetchRates();
-    }, [isConnected, publicClient, BUY_BOND_ADDRESS]);
+    }, [isConnected, publicClient]);
 
     // Optionally adjust the overall loading state if needed
     const isLoading = loading; // Or customize further if needed

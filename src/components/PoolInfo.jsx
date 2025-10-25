@@ -1,4 +1,3 @@
-import React from 'react';
 import { usePoolInfo } from '../hooks/usePoolInfo';
 
 const PoolInfo = () => {

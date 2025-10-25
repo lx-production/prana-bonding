@@ -1,8 +1,8 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context';
 
 // Create theme-specific Material UI themes
 const createMuiTheme = (mode) => {
@@ -82,3 +82,22 @@ const DurationSlider = ({
 };
 
 export default DurationSlider; 
+
+DurationSlider.propTypes = {
+  selectedIndex: PropTypes.number.isRequired,
+  setSelectedIndex: PropTypes.func.isRequired,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      label: PropTypes.string.isRequired,
+      seconds: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    })
+  ).isRequired,
+  valueMap: PropTypes.objectOf(
+    PropTypes.shape({
+      rate: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    })
+  ).isRequired,
+  valueLabelSuffix: PropTypes.string,
+  disabled: PropTypes.bool,
+  labelId: PropTypes.string.isRequired,
+};

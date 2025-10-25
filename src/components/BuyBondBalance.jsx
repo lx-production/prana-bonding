@@ -1,4 +1,3 @@
-import React from 'react';
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
 import { BUY_BOND_ADDRESS_V1, BUY_BOND_ADDRESS_V2, BUY_BOND_ABI_V1, BUY_BOND_ABI_V2 } from '../constants/buyBondContract';
@@ -22,12 +21,12 @@ const BuyBondBalance = () => {
   });
 
   // Fetch the committed PRANA value using the new hook
-  const { committedPrana: committedPranaV2, committedPranaRaw: committedPranaRawV2, isLoading: isLoadingCommittedV2, error: committedErrorV2 } = useCommittedPrana({
+  const { committedPranaRaw: committedPranaRawV2, isLoading: isLoadingCommittedV2, error: committedErrorV2 } = useCommittedPrana({
     contractAddress: BUY_BOND_ADDRESS_V2,
     contractAbi: BUY_BOND_ABI_V2,
   });
 
-  const { committedPrana: committedPranaV1, committedPranaRaw: committedPranaRawV1, isLoading: isLoadingCommittedV1, error: committedErrorV1 } = useCommittedPrana({
+  const { committedPranaRaw: committedPranaRawV1, isLoading: isLoadingCommittedV1, error: committedErrorV1 } = useCommittedPrana({
     contractAddress: BUY_BOND_ADDRESS_V1,
     contractAbi: BUY_BOND_ABI_V1,
   });

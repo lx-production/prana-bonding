@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
 import { PRANA_ADDRESS, PRANA_ABI } from '../constants/sharedContracts';

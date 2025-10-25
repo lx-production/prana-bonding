@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
 import { WBTC_ADDRESS, WBTC_ABI } from '../constants/sharedContracts';

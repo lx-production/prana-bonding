@@ -2,7 +2,6 @@ import { useReadContract } from 'wagmi';
 import { SELL_BOND_ADDRESS, SELL_BOND_ABI } from '../constants/sellBondContract';
 import { WBTC_DECIMALS } from '../constants/sharedContracts';
 import { formatUnits } from 'viem';
-import { formatUnits } from 'viem';
 
 export const useCommittedWbtc = ({
   contractAddress = SELL_BOND_ADDRESS,

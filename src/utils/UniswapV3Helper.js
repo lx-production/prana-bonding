@@ -1,6 +1,5 @@
 import { FullMath } from './FullMath';
-import { V3_POOL_SLOT0_ABI, V3_POOL_LIQUIDITY_ABI, PRANA_DECIMALS, WBTC_PRANA_V3_POOL } from '../constants/sharedContracts';
-import { BOND_TERMS } from '../constants/bondTerms';
+import { V3_POOL_SLOT0_ABI, V3_POOL_LIQUIDITY_ABI, WBTC_PRANA_V3_POOL } from '../constants/sharedContracts';
 
 /**
  * Lấy reserves từ Uniswap V3 Pool

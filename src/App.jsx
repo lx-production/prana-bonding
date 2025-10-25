@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAccount } from 'wagmi';
 import ConnectWallet from './components/ConnectWallet';
 import ThemeSwitcher from './components/ThemeSwitcher';
