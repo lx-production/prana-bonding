@@ -1,32 +1,59 @@
 import React from 'react';
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { BUY_BOND_ADDRESS } from '../constants/buyBondContract'; // Use the Bond contract address
+import { BUY_BOND_ADDRESS_V1, BUY_BOND_ADDRESS_V2, BUY_BOND_ABI_V1, BUY_BOND_ABI_V2 } from '../constants/buyBondContract';
 import { PRANA_ADDRESS, PRANA_ABI, PRANA_DECIMALS } from '../constants/sharedContracts'; // Use PRANA token details for balance check
-import { useCommittedPrana } from '../hooks/useCommittedPrana'; // Import the new hook
+import { useCommittedPrana } from '../hooks/useCommittedPrana';
 
 const BuyBondBalance = () => {
   // Fetch the balance of PRANA tokens held by the BUY_BOND_ADDRESS
-  const { data: balance, isLoading: isLoadingBalance, error: balanceError } = useReadContract({
-    address: PRANA_ADDRESS, // Check balance on the PRANA token contract
+  const { data: balanceV1, isLoading: isLoadingBalanceV1, error: balanceErrorV1 } = useReadContract({
+    address: PRANA_ADDRESS,
     abi: PRANA_ABI,
     functionName: 'balanceOf',
-    args: [BUY_BOND_ADDRESS],
+    args: [BUY_BOND_ADDRESS_V1],
+  });
+
+  const { data: balanceV2, isLoading: isLoadingBalanceV2, error: balanceErrorV2 } = useReadContract({
+    address: PRANA_ADDRESS,
+    abi: PRANA_ABI,
+    functionName: 'balanceOf',
+    args: [BUY_BOND_ADDRESS_V2],
   });
 
   // Fetch the committed PRANA value using the new hook
-  const { committedPrana, isLoading: isLoadingCommitted, error: committedError } = useCommittedPrana();
+  const { committedPrana: committedPranaV2, committedPranaRaw: committedPranaRawV2, isLoading: isLoadingCommittedV2, error: committedErrorV2 } = useCommittedPrana({
+    contractAddress: BUY_BOND_ADDRESS_V2,
+    contractAbi: BUY_BOND_ABI_V2,
+  });
+
+  const { committedPrana: committedPranaV1, committedPranaRaw: committedPranaRawV1, isLoading: isLoadingCommittedV1, error: committedErrorV1 } = useCommittedPrana({
+    contractAddress: BUY_BOND_ADDRESS_V1,
+    contractAbi: BUY_BOND_ABI_V1,
+  });
 
   // Log any errors for debugging
-  if (balanceError) {
-    console.error("Contract Balance error:", balanceError);
+  if (balanceErrorV1) {
+    console.error("Contract Balance V1 error:", balanceErrorV1);
   }
-  if (committedError) {
-    console.error("Committed Prana error:", committedError);
+  if (balanceErrorV2) {
+    console.error("Contract Balance V2 error:", balanceErrorV2);
+  }
+  if (committedErrorV1) {
+    console.error("Committed Prana V1 error:", committedErrorV1);
+  }
+  if (committedErrorV2) {
+    console.error("Committed Prana V2 error:", committedErrorV2);
   }
 
-  const isLoading = isLoadingBalance || isLoadingCommitted;
-  const error = balanceError || committedError;
+  const isLoading = isLoadingBalanceV1 || isLoadingBalanceV2 || isLoadingCommittedV1 || isLoadingCommittedV2;
+  const error = balanceErrorV1 || balanceErrorV2 || committedErrorV1 || committedErrorV2;
+
+  const totalBalance = (balanceV1 || 0n) + (balanceV2 || 0n);
+  const totalCommittedRaw = (committedPranaRawV1 || 0n) + (committedPranaRawV2 || 0n);
+  const totalCommitted = formatUnits(totalCommittedRaw, PRANA_DECIMALS);
+
+  const formattedBalance = formatUnits(totalBalance, PRANA_DECIMALS);
 
   return (
     <div className="balance-container">
@@ -38,10 +65,10 @@ const BuyBondBalance = () => {
       ) : (
         <>
           <p>
-            Balance: <span className="balance">{balance ? formatUnits(balance, PRANA_DECIMALS) : '0'}</span> <span className="token-symbol">PRANA</span>
+            Balance: <span className="balance">{formattedBalance}</span> <span className="token-symbol">PRANA</span>
           </p>
           <p>
-            Committed: <span className="balance">{committedPrana}</span> <span className="token-symbol">PRANA</span>
+            Committed: <span className="balance">{totalCommitted}</span> <span className="token-symbol">PRANA</span>
           </p>
         </>
       )}

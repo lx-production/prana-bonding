@@ -10,7 +10,14 @@ import { PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/sharedContracts';
  * @param {function} refetchBonds - Function to refetch bonds after an action
  * @returns {object} - Contains action functions and processed bond states
  */
-const useActiveSellBonds = (bondsData, refetchBonds) => {
+const useActiveSellBonds = (
+  bondsData,
+  refetchBonds,
+  {
+    contractAddress = SELL_BOND_ADDRESS,
+    contractAbi = SELL_BOND_ABI,
+  } = {}
+) => {
   const { writeContractAsync } = useWriteContract();
   const [actionLoading, setActionLoading] = useState({ bondId: null, action: null });
   const [error, setError] = useState('');
@@ -137,8 +144,8 @@ const useActiveSellBonds = (bondsData, refetchBonds) => {
       const claimableAmount = bond ? bond.claimableWbtcFormatted : 'some'; // Use claimableWbtcFormatted
 
       const txHash = await writeContractAsync({
-        address: SELL_BOND_ADDRESS, // Use sell bond address
-        abi: SELL_BOND_ABI,         // Use sell bond ABI
+        address: contractAddress,
+        abi: contractAbi,
         functionName: 'claimBond',
         args: [BigInt(bondId)] // Ensure bondId is passed as BigInt if required by ABI
       });

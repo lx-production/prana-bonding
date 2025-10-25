@@ -204,7 +204,7 @@ const useSellBond = () => {
             const hash = await writeContractAsync({
                 address: SELL_BOND_ADDRESS,
                 abi: SELL_BOND_ABI,
-                functionName: 'sellBondForPranaAmount',
+                functionName: 'sellBond',
                 args: [finalPranaAmountWei, selectedTermEnum],
             });
             setSuccess(`Giao dịch bán bond đã được gửi thành công! Hash: ${hash}`);
@@ -244,52 +244,31 @@ const useSellBond = () => {
         return requiredPranaWei > 0n && requiredPranaWei > pranaAllowance;
     }, [pranaAmount, pranaAllowance, isConnected, isValidPranaInput]);
 
-    // Fetch Bond Rates (Similar logic to useBuyBond, using SELL_BOND_ADDRESS)
+    // Fetch Bond Rates (V2: bondRates(termId))
     useEffect(() => {
       async function fetchRates() {
         if (!isConnected || !publicClient) return;
 
         try {
-          const result = await publicClient.readContract({
-            address: SELL_BOND_ADDRESS, // Use Sell Bond Contract
-            abi: SELL_BOND_ABI,
-            functionName: 'getAllBondRates'
-          });
-
-          const [termEnums, rateValues, durationValues] = result;
-          let ratesInfoMap = {};
           const termOptions = BOND_TERMS;
+          const entries = await Promise.all(
+            termOptions.map(async (option) => {
+              const [rate, duration] = await publicClient.readContract({
+                address: SELL_BOND_ADDRESS,
+                abi: SELL_BOND_ABI,
+                functionName: 'bondRates',
+                args: [option.id]
+              });
 
-          if (termEnums && rateValues && durationValues && termEnums.length === rateValues.length && termEnums.length === durationValues.length) {
-            for (let i = 0; i < termEnums.length; i++) {
-              const termEnum = Number(termEnums[i]);
-              const rate = BigInt(rateValues[i]);
-              const duration = BigInt(durationValues[i]);
-              const termOption = termOptions.find(option => option.id === termEnum);
+              return [option.seconds, { rate: BigInt(rate), duration: BigInt(duration) }];
+            })
+          );
 
-              if (termOption) {
-                ratesInfoMap[termOption.seconds] = {
-                   rate: rate,
-                   duration: duration
-                };
-              } else {
-                console.warn(`SellBond: Could not find matching term option for enum ID: ${termEnum}`);
-              }
-            }
-            console.log('Processed sell bond rates info map:', ratesInfoMap);
-            setBondRates(ratesInfoMap);
-          } else {
-             console.error("SellBond: Mismatch in array lengths or invalid data received from getAllBondRates", result);
-             setError("Lỗi: Dữ liệu tỷ lệ bond (bán) không hợp lệ.");
-          }
-
+          const ratesInfoMap = Object.fromEntries(entries);
+          setBondRates(ratesInfoMap);
         } catch (err) {
           console.error('Error fetching sell bond rates:', err);
-           if (err instanceof Error && err.message.includes('reverted')) {
-                setError('Lỗi: Không thể đọc tỷ lệ bond (bán) từ hợp đồng.');
-            } else {
-                setError('Lỗi khi lấy dữ liệu tỷ lệ bond (bán).');
-            }
+          setError('Lỗi khi lấy dữ liệu tỷ lệ bond (bán).');
         }
       }
 

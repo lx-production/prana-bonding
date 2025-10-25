@@ -331,62 +331,31 @@ const useBuyBond = () => {
         return isConnected && requiredWbtcWei > 0n && requiredWbtcWei > wbtcAllowance;
     }, [inputType, wbtcAmount, pranaAmount, calculatedWbtc, wbtcAllowance, isConnected, isValidWbtcInput, isValidPranaInput]);
 
-    // Đọc tất cả Bond Rates
+    // Đọc tất cả Bond Rates cho V2 bằng cách gọi bondRates(enum)
     useEffect(() => {
       async function fetchRates() {
         if (!isConnected || !publicClient) return;
 
         try {
-          const result = await publicClient.readContract({
-            address: BUY_BOND_ADDRESS,
-            abi: BUY_BOND_ABI,
-            functionName: 'getAllBondRates'
-          });
+          const termOptions = BOND_TERMS;
+          const entries = await Promise.all(
+            termOptions.map(async (option) => {
+              const [rate, duration] = await publicClient.readContract({
+                address: BUY_BOND_ADDRESS,
+                abi: BUY_BOND_ABI,
+                functionName: 'bondRates',
+                args: [option.id]
+              });
 
-          // Correctly destructure all three returned arrays
-          // result should be [termEnumsArray, ratesArray, durationsArray]
-          // Note: viem returns BigInts for uint types.
-          const [termEnums, rateValues, durationValues] = result;
+              return [option.seconds, { rate: BigInt(rate), duration: BigInt(duration) }];
+            })
+          );
 
-
-          // Create a map to store { rate, duration } keyed by term duration in seconds
-          let ratesInfoMap = {};
-          const termOptions = BOND_TERMS; // Ensure this is defined correctly
-
-          if (termEnums && rateValues && durationValues && termEnums.length === rateValues.length && termEnums.length === durationValues.length) {
-            for (let i = 0; i < termEnums.length; i++) {
-              const termEnum = Number(termEnums[i]); // Convert BigInt enum value to Number
-              const rate = BigInt(rateValues[i]); // Keep as BigInt (basis points)
-              const duration = BigInt(durationValues[i]); // Keep as BigInt (seconds)
-
-              // Find the corresponding option in BOND_TERMS using the enum ID
-              const termOption = termOptions.find(option => option.id === termEnum);
-
-              if (termOption) {
-                // Use the 'seconds' from termOption as the key for the map
-                ratesInfoMap[termOption.seconds] = {
-                   rate: rate,       // Store rate as BigInt (basis points)
-                   duration: duration // Store duration as BigInt (seconds)
-                };
-              } else {
-                console.warn(`Could not find matching term option for enum ID: ${termEnum}`);
-              }
-            }
-            console.log('Processed bond rates info map:', ratesInfoMap);
-            setBondRates(ratesInfoMap); // Set the map containing rate and duration objects
-          } else {
-             console.error("Mismatch in array lengths or invalid data received from getAllBondRates", result);
-             setError("Lỗi: Dữ liệu tỷ lệ bond không hợp lệ.");
-          }
-
+          const ratesInfoMap = Object.fromEntries(entries);
+          setBondRates(ratesInfoMap);
         } catch (err) {
           console.error('Error fetching bond rates:', err);
-          // Provide more specific error feedback if possible
-           if (err instanceof Error && err.message.includes('reverted')) {
-                setError('Lỗi: Không thể đọc tỷ lệ bond từ hợp đồng. Vui lòng kiểm tra ABI hoặc địa chỉ hợp đồng.');
-            } else {
-                setError('Lỗi khi lấy dữ liệu tỷ lệ bond.');
-            }
+          setError('Lỗi khi lấy dữ liệu tỷ lệ bond.');
         }
       }
 
