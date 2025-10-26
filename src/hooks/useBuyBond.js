@@ -23,6 +23,7 @@ const useBuyBond = () => {
     const [isWaitingForApprovalConfirmation, setIsWaitingForApprovalConfirmation] = useState(false);
     const [didSyncReservesFromWbtc, setDidSyncReservesFromWbtc] = useState(false);
     const [didSyncReservesFromPrana, setDidSyncReservesFromPrana] = useState(false);
+    const [reserveWarning, setReserveWarning] = useState('');
 
     const { writeContractAsync, status: writeStatus } = useWriteContract();
     const publicClient = usePublicClient();
@@ -77,14 +78,16 @@ const useBuyBond = () => {
                 setCalculatedWbtc('0');
                 setDidSyncReservesFromWbtc(false);
                 setDidSyncReservesFromPrana(false);
+                setReserveWarning('');
                 return; // Not ready yet
             }
-            
+
             setIsCalculating(true);
             setCalculatedPrana('0'); // Reset previous calculations
             setCalculatedWbtc('0');
             setDidSyncReservesFromWbtc(false);
             setDidSyncReservesFromPrana(false);
+            setReserveWarning('');
 
             try {
                 if (inputType === 'WBTC' && isValidWbtcInput) {
@@ -111,22 +114,31 @@ const useBuyBond = () => {
                     if (pranaAmountWei === 0n) {
                         setCalculatedWbtc('0');
                         setDidSyncReservesFromPrana(false);
+                        setReserveWarning('');
                     } else {
-                        const { wbtcQuote, reservesSynced } = await calculateWbtcQuote({
+                        const { wbtcQuote, reservesSynced, warning } = await calculateWbtcQuote({
                             pranaAmountWei,
                             period: selectedTermEnum,
                             publicClient
                         });
 
-                    const formattedWbtc = formatUnits(wbtcQuote, WBTC_DECIMALS);
-                    setCalculatedWbtc(formattedWbtc);
-                    setDidSyncReservesFromPrana(reservesSynced);
+                        if (warning) {
+                            setReserveWarning(warning);
+                            setCalculatedWbtc('0');
+                            setDidSyncReservesFromPrana(false);
+                        } else {
+                            const formattedWbtc = formatUnits(wbtcQuote, WBTC_DECIMALS);
+                            setCalculatedWbtc(formattedWbtc);
+                            setDidSyncReservesFromPrana(reservesSynced);
+                            setReserveWarning('');
+                        }
                     }
                 } else {
                     setCalculatedPrana('0');
                     setCalculatedWbtc('0');
                     setDidSyncReservesFromWbtc(false);
                     setDidSyncReservesFromPrana(false);
+                    setReserveWarning('');
                 }
             } catch (err) {
                 console.error("Calculation error:", err);
@@ -134,6 +146,7 @@ const useBuyBond = () => {
                 setCalculatedWbtc('0');
                 setDidSyncReservesFromWbtc(false);
                 setDidSyncReservesFromPrana(false);
+                setReserveWarning('');
             } finally {
                 setIsCalculating(false);
             }
@@ -405,6 +418,7 @@ const useBuyBond = () => {
         isValidPranaInput,
         didSyncReservesFromWbtc,
         didSyncReservesFromPrana,
+        reserveWarning,
     };
 };
 
