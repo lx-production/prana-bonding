@@ -1,38 +1,10 @@
 import { FullMath } from './FullMath';
-import { toBigInt, extractResult, ensurePositiveReserve } from './bigint-utils';
+import { toBigInt, ensurePositiveReserve } from './bigint-utils';
 import { fetchPoolReserves } from './UniswapV3Helper';
 import { SELL_BOND_ADDRESS, SELL_BOND_ABI } from '../constants/sellBondContract';
+import { fetchContractWbtcBalance, fetchImpactedReserves } from './sell-bond-contract-utils';
 
-const RESERVE_WARNING_MESSAGE = 'Lượng PRANA muốn bán vượt quá mức ngân quỹ có thể mua.';
-
-const fetchImpactedReserves = async (publicClient) => {
-  const [wbtcRes, pranaRes, lastSync] = await publicClient.multicall({
-    contracts: [
-      {
-        address: SELL_BOND_ADDRESS,
-        abi: SELL_BOND_ABI,
-        functionName: 'impactedWbtcReserve',
-      },
-      {
-        address: SELL_BOND_ADDRESS,
-        abi: SELL_BOND_ABI,
-        functionName: 'impactedPranaReserve',
-      },
-      {
-        address: SELL_BOND_ADDRESS,
-        abi: SELL_BOND_ABI,
-        functionName: 'lastImpactedSync',
-      },
-    ],
-    allowFailure: false,
-  });
-
-  return {
-    impactedWbtcReserve: toBigInt(extractResult(wbtcRes)),
-    impactedPranaReserve: toBigInt(extractResult(pranaRes)),
-    lastImpactedSync: toBigInt(extractResult(lastSync)),
-  };
-};
+const RESERVE_WARNING_MESSAGE = 'Lượng PRANA muốn bán vượt quá mức WBTC ngân quỹ có thể trả.';
 
 const computeRegularWbtcFromImpacted = (impactedWbtc, impactedPrana, netPranaAmount) => {
   const impactedWbtcBig = toBigInt(impactedWbtc);
@@ -75,13 +47,12 @@ export const calculateWbtcQuote = async ({ pranaAmountWei, period, publicClient 
     return { wbtcQuote: 0n, reservesSynced: false, warning: '' };
   }
 
+  // Check if contract has enough WBTC to pay out the calculated amount
+  const { availableWbtc } = await fetchContractWbtcBalance(publicClient);
+
   const { impactedWbtcReserve, impactedPranaReserve } = await fetchImpactedReserves(publicClient);
   const impactedWbtcBig = toBigInt(impactedWbtcReserve);
   const impactedPranaBig = toBigInt(impactedPranaReserve);
-
-  if (netPranaAmount > impactedPranaBig) {
-    return { wbtcQuote: 0n, reservesSynced: false, warning: RESERVE_WARNING_MESSAGE };
-  }
 
   const impactedWbtcSafe = ensurePositiveReserve(impactedWbtcBig);
   const impactedPranaSafe = ensurePositiveReserve(impactedPranaBig);
@@ -95,10 +66,6 @@ export const calculateWbtcQuote = async ({ pranaAmountWei, period, publicClient 
   const { poolWbtcReserve, poolPranaReserve } = await fetchPoolReserves(publicClient);
   const poolWbtcBig = toBigInt(poolWbtcReserve);
   const poolPranaBig = toBigInt(poolPranaReserve);
-
-  if (netPranaAmount > poolPranaBig) {
-    return { wbtcQuote: 0n, reservesSynced: false, warning: RESERVE_WARNING_MESSAGE };
-  }
 
   const poolWbtcSafe = ensurePositiveReserve(poolWbtcBig);
   const poolPranaSafe = ensurePositiveReserve(poolPranaBig);
@@ -126,6 +93,11 @@ export const calculateWbtcQuote = async ({ pranaAmountWei, period, publicClient 
 
   const premiumRate = BigInt(rate);
   const wbtcQuote = FullMath.mulDiv(regularBaseline, 10000n + premiumRate, 10000n);
+
+  // Check if the final WBTC quote exceeds available WBTC balance
+  if (wbtcQuote > availableWbtc) {
+    return { wbtcQuote: 0n, reservesSynced: false, warning: RESERVE_WARNING_MESSAGE };
+  }
 
   return { wbtcQuote, reservesSynced, warning: '' };
 };

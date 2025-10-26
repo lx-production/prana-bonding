@@ -2,8 +2,10 @@ import { FullMath } from './FullMath';
 import { toBigInt, extractResult, ensurePositiveReserve } from './bigint-utils';
 import { fetchPoolReserves } from './UniswapV3Helper';
 import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
+import { PRANA_ADDRESS, PRANA_ABI } from '../constants/sharedContracts';
 
 const RESERVE_WARNING_MESSAGE = 'Lượng PRANA muốn mua vượt quá nguồn cung có thể bán.';
+const TREASURY_WARNING_MESSAGE = 'Kho PRANA không đủ để bán số lượng yêu cầu.';
 
 const fetchImpactedReserves = async (publicClient) => {
   const [wbtcRes, pranaRes, lastSync] = await publicClient.multicall({
@@ -33,10 +35,6 @@ const fetchImpactedReserves = async (publicClient) => {
     lastImpactedSync: toBigInt(extractResult(lastSync))
   };
 };
-
-
-
-
 
 const computeRegularWbtcFromImpacted = (impactedWbtc, impactedPrana, pranaAmount) => {
   const impactedWbtcBig = toBigInt(impactedWbtc);
@@ -78,6 +76,30 @@ const computeMarketPrana = (poolWbtc, poolPrana, wbtcAfterFee) => {
   return FullMath.mulDiv(poolPranaBig, wbtcAfterFeeBig, poolWbtcBig + wbtcAfterFeeBig);
 };
 
+const fetchAvailableTreasuryPrana = async (publicClient) => {
+  const [committedPranaRes, treasuryBalanceRes] = await publicClient.multicall({
+    contracts: [
+      {
+        address: BUY_BOND_ADDRESS,
+        abi: BUY_BOND_ABI,
+        functionName: 'committedPrana'
+      },
+      {
+        address: PRANA_ADDRESS,
+        abi: PRANA_ABI,
+        functionName: 'balanceOf',
+        args: [BUY_BOND_ADDRESS]
+      }
+    ],
+    allowFailure: false
+  });
+
+  const committedPrana = toBigInt(extractResult(committedPranaRes));
+  const treasuryBalance = toBigInt(extractResult(treasuryBalanceRes));
+  const availablePrana = treasuryBalance - committedPrana;
+
+  return availablePrana > 0n ? availablePrana : 0n;
+};
 
 export const calculateWbtcQuote = async ({ pranaAmountWei, period, publicClient }) => {
   if (!publicClient) {
@@ -93,6 +115,15 @@ export const calculateWbtcQuote = async ({ pranaAmountWei, period, publicClient 
       wbtcQuote: 0n,
       reservesSynced: false,
       warning: RESERVE_WARNING_MESSAGE
+    };
+  }
+
+  const availableTreasuryPrana = await fetchAvailableTreasuryPrana(publicClient);
+  if (pranaAmountWei > availableTreasuryPrana) {
+    return {
+      wbtcQuote: 0n,
+      reservesSynced: false,
+      warning: TREASURY_WARNING_MESSAGE
     };
   }
 
