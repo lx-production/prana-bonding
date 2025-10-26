@@ -1,53 +1,60 @@
 import { FullMath } from './FullMath';
+import { toBigInt, extractResult } from './bigint-utils';
 import { V3_POOL_SLOT0_ABI, V3_POOL_LIQUIDITY_ABI, WBTC_PRANA_V3_POOL } from '../constants/sharedContracts';
 
 /**
- * Lấy reserves từ Uniswap V3 Pool
+ * Fetches reserves from Uniswap V3 Pool using efficient multicall
  * @param {object} publicClient Viem publicClient
- * @param {string} poolAddress Địa chỉ pool Uniswap V3
- * @returns {Promise<{wbtcReserve: bigint, pranaReserve: bigint}>} Reserves của WBTC và PRANA
+ * @param {string} poolAddress Address of the Uniswap V3 pool (defaults to WBTC_PRANA_V3_POOL)
+ * @returns {Promise<{poolWbtcReserve: bigint, poolPranaReserve: bigint}>} Pool reserves for WBTC and PRANA
  */
-export const getReserves = async (publicClient, poolAddress = WBTC_PRANA_V3_POOL) => {
+export const fetchPoolReserves = async (publicClient, poolAddress = WBTC_PRANA_V3_POOL) => {
   if (!publicClient || !poolAddress) {
-    return { wbtcReserve: 0n, pranaReserve: 0n };
+    return { poolWbtcReserve: 0n, poolPranaReserve: 0n };
   }
 
   try {
-    const slot0Data = await publicClient.readContract({
-      address: poolAddress,
-      abi: V3_POOL_SLOT0_ABI,
-      functionName: 'slot0',
+    const [slot0Result, liquidityResult] = await publicClient.multicall({
+      contracts: [
+        {
+          address: poolAddress,
+          abi: V3_POOL_SLOT0_ABI,
+          functionName: 'slot0'
+        },
+        {
+          address: poolAddress,
+          abi: V3_POOL_LIQUIDITY_ABI,
+          functionName: 'liquidity'
+        }
+      ],
+      allowFailure: false
     });
-    
-    // Trích xuất sqrtPriceX96 từ kết quả
-    const sqrtPriceX96 = slot0Data[0];
-    
-    // Lấy liquidity
-    const liquidityData = await publicClient.readContract({
-      address: poolAddress,
-      abi: V3_POOL_LIQUIDITY_ABI,
-      functionName: 'liquidity',
-    });
-    
-    const liquidity = liquidityData;
 
-    // Kiểm tra dữ liệu
-    if (!sqrtPriceX96 || sqrtPriceX96 === 0n || !liquidity || liquidity === 0n) {
-      throw new Error("Invalid price or liquidity");
+    const slot0Data = extractResult(slot0Result);
+    const liquidityData = extractResult(liquidityResult);
+
+    const sqrtPriceSource = Array.isArray(slot0Data)
+      ? slot0Data[0]
+      : slot0Data?.sqrtPriceX96 ?? slot0Data;
+    const sqrtPriceX96 = toBigInt(sqrtPriceSource);
+    const liquidity = toBigInt(liquidityData);
+
+    if (sqrtPriceX96 === 0n || liquidity === 0n) {
+      return { poolWbtcReserve: 0n, poolPranaReserve: 0n };
     }
 
-    // Tính Q96 = 2^96
     const Q96 = 2n ** 96n;
-    
-    // Tính reserves theo công thức Uniswap v3
-    // Với token0 (WBTC): L × (2^96) / sqrtP
-    // Với token1 (PRANA): L × sqrtP / (2^96)
-    const wbtcReserve = FullMath.mulDiv(liquidity, Q96, sqrtPriceX96);
-    const pranaReserve = FullMath.mulDiv(liquidity, sqrtPriceX96, Q96);
-    
-    return { wbtcReserve, pranaReserve };
+    const poolWbtcReserve = FullMath.mulDiv(liquidity, Q96, sqrtPriceX96);
+    const poolPranaReserve = FullMath.mulDiv(liquidity, sqrtPriceX96, Q96);
+
+    return { poolWbtcReserve, poolPranaReserve };
   } catch (err) {
-    console.error("Error getting reserves:", err);
-    return { wbtcReserve: 0n, pranaReserve: 0n };
+    console.error("Error fetching pool reserves:", err);
+    return { poolWbtcReserve: 0n, poolPranaReserve: 0n };
   }
 };
+
+/**
+ * @deprecated Use fetchPoolReserves instead. Kept for backward compatibility.
+ */
+export const getReserves = fetchPoolReserves;
