@@ -4,6 +4,7 @@ import { parseUnits, formatUnits } from 'viem';
 import { SELL_BOND_ADDRESS, SELL_BOND_ABI } from '../constants/sellBondContract';
 import { PRANA_ADDRESS, PRANA_ABI, PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/sharedContracts';
 import { BOND_TERMS } from '../constants/bondTerms';
+import { calculateWbtcQuote } from '../utils/SellBondPricing';
 
 const useSellBond = () => {
     const { address, isConnected } = useAccount();
@@ -17,6 +18,7 @@ const useSellBond = () => {
     const [calculatedWbtc, setCalculatedWbtc] = useState('0'); // Calculated WBTC user will receive
     const [approveTxHash, setApproveTxHash] = useState(null);
     const [isWaitingForApprovalConfirmation, setIsWaitingForApprovalConfirmation] = useState(false);
+    const [didSyncReserves, setDidSyncReserves] = useState(false);
 
     const { writeContractAsync, status: writeStatus } = useWriteContract();
     const publicClient = usePublicClient();
@@ -77,22 +79,23 @@ const useSellBond = () => {
 
                 if (pranaAmountWei === 0n) {
                     setCalculatedWbtc('0');
+                    setDidSyncReserves(false);
                 } else {
-                    // Call the contract's calculateWbtcAmount function
-                    const calculatedWbtcWei = await publicClient.readContract({
-                        address: SELL_BOND_ADDRESS,
-                        abi: SELL_BOND_ABI,
-                        functionName: 'calculateWbtcAmount',
-                        args: [pranaAmountWei, selectedTermEnum]
+                    const { wbtcQuote, reservesSynced } = await calculateWbtcQuote({
+                        pranaAmountWei,
+                        period: selectedTermEnum,
+                        publicClient,
                     });
 
-                    const formattedWbtc = formatUnits(calculatedWbtcWei, WBTC_DECIMALS);
+                    const formattedWbtc = formatUnits(wbtcQuote, WBTC_DECIMALS);
                     setCalculatedWbtc(formattedWbtc);
+                    setDidSyncReserves(reservesSynced);
                 }
             } catch (err) {
                 console.error("WBTC Calculation error:", err);
                 setError("Lỗi tính toán số WBTC nhận được.");
                 setCalculatedWbtc('0');
+                setDidSyncReserves(false);
             } finally {
                 setIsCalculating(false);
             }
@@ -299,6 +302,7 @@ const useSellBond = () => {
         approveTxHash,
         isWaitingForApprovalConfirmation,
         isValidPranaInput,
+        didSyncReserves,
     };
 };
 

@@ -28,6 +28,8 @@ const BuyBondForm = () => {
         isWaitingForApprovalConfirmation,
         isValidWbtcInput,
         isValidPranaInput,
+        didSyncReservesFromWbtc,
+        didSyncReservesFromPrana,
         // approveTxHash,
     } = useBuyBond();
 
@@ -91,6 +93,9 @@ const BuyBondForm = () => {
                      {inputType === 'PRANA' && pranaAmount && parseFloat(pranaAmount) > 0 && (
                         <div className="calculated-amount">
                             Cần trả: <strong>{displayRequiredWbtc}</strong>
+                            {didSyncReservesFromPrana && (
+                                <span className="sync-tag">(Đã đồng bộ dự trữ thị trường)</span>
+                            )}
                         </div>
                     )}
                 </div>
@@ -111,6 +116,9 @@ const BuyBondForm = () => {
                     {inputType === 'WBTC' && wbtcAmount && parseFloat(wbtcAmount) > 0 && (
                         <div className="calculated-amount">
                             Nhận được: <strong>{displayPurchasablePrana}</strong>
+                            {didSyncReservesFromWbtc && (
+                                <span className="sync-tag">(Đã đồng bộ dự trữ thị trường)</span>
+                            )}
                         </div>
                     )}
                 </div>                

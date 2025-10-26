@@ -25,6 +25,7 @@ const SellBondForm = () => {
         calculatedWbtc,
         isWaitingForApprovalConfirmation,
         isValidPranaInput,
+        didSyncReserves,
     } = useSellBond();
 
     if (!isConnected) return <p>Vui lòng kết nối ví của bạn.</p>;
@@ -72,6 +73,9 @@ const SellBondForm = () => {
                     {isValidPranaInput && ( // Use validity check
                         <div className="calculated-amount">
                             Sẽ nhận được: <strong>{displayReceivedWbtc}</strong>
+                            {didSyncReserves && (
+                                <span className="sync-tag">(Đã đồng bộ dự trữ thị trường)</span>
+                            )}
                         </div>
                     )}
                 </div>

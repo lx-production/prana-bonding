@@ -21,6 +21,8 @@ const useBuyBond = () => {
     const [calculatedWbtc, setCalculatedWbtc] = useState('0'); // Calculated WBTC for PRANA input
     const [approveTxHash, setApproveTxHash] = useState(null); // State to store the tx hash
     const [isWaitingForApprovalConfirmation, setIsWaitingForApprovalConfirmation] = useState(false);
+    const [didSyncReservesFromWbtc, setDidSyncReservesFromWbtc] = useState(false);
+    const [didSyncReservesFromPrana, setDidSyncReservesFromPrana] = useState(false);
 
     const { writeContractAsync, status: writeStatus } = useWriteContract();
     const publicClient = usePublicClient();
@@ -73,12 +75,16 @@ const useBuyBond = () => {
             if (!isConnected || !publicClient) {
                 setCalculatedPrana('0');
                 setCalculatedWbtc('0');
+                setDidSyncReservesFromWbtc(false);
+                setDidSyncReservesFromPrana(false);
                 return; // Not ready yet
             }
             
             setIsCalculating(true);
             setCalculatedPrana('0'); // Reset previous calculations
             setCalculatedWbtc('0');
+            setDidSyncReservesFromWbtc(false);
+            setDidSyncReservesFromPrana(false);
 
             try {
                 if (inputType === 'WBTC' && isValidWbtcInput) {
@@ -86,8 +92,9 @@ const useBuyBond = () => {
 
                     if (wbtcAmountWei === 0n) {
                         setCalculatedPrana('0');
+                        setDidSyncReservesFromWbtc(false);
                     } else {
-                        const { pranaQuote } = await calculatePranaQuote({
+                        const { pranaQuote, reservesSynced } = await calculatePranaQuote({
                             wbtcAmountWei,
                             period: selectedTermEnum,
                             publicClient
@@ -95,6 +102,7 @@ const useBuyBond = () => {
 
                         const formattedPrana = formatUnits(pranaQuote, PRANA_DECIMALS);
                         setCalculatedPrana(formattedPrana);
+                        setDidSyncReservesFromWbtc(reservesSynced);
                     }
 
                 } else if (inputType === 'PRANA' && isValidPranaInput) {
@@ -102,8 +110,9 @@ const useBuyBond = () => {
 
                     if (pranaAmountWei === 0n) {
                         setCalculatedWbtc('0');
+                        setDidSyncReservesFromPrana(false);
                     } else {
-                        const { wbtcQuote } = await calculateWbtcQuote({
+                        const { wbtcQuote, reservesSynced } = await calculateWbtcQuote({
                             pranaAmountWei,
                             period: selectedTermEnum,
                             publicClient
@@ -111,15 +120,20 @@ const useBuyBond = () => {
 
                     const formattedWbtc = formatUnits(wbtcQuote, WBTC_DECIMALS);
                     setCalculatedWbtc(formattedWbtc);
+                    setDidSyncReservesFromPrana(reservesSynced);
                     }
                 } else {
                     setCalculatedPrana('0');
                     setCalculatedWbtc('0');
+                    setDidSyncReservesFromWbtc(false);
+                    setDidSyncReservesFromPrana(false);
                 }
             } catch (err) {
                 console.error("Calculation error:", err);
                 setCalculatedPrana('0');
                 setCalculatedWbtc('0');
+                setDidSyncReservesFromWbtc(false);
+                setDidSyncReservesFromPrana(false);
             } finally {
                 setIsCalculating(false);
             }
@@ -389,6 +403,8 @@ const useBuyBond = () => {
         isWaitingForApprovalConfirmation,
         isValidWbtcInput,
         isValidPranaInput,
+        didSyncReservesFromWbtc,
+        didSyncReservesFromPrana,
     };
 };
 
