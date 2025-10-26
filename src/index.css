@@ -836,6 +836,26 @@ button {
   color: var(--danger-color); /* Use danger color text */
 }
 
+/* Bond version badge styling */
+.bond-version-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Specific styles for each version */
+.bond-version-badge.version-v2 {
+  background-color: rgba(79, 110, 242, 0.1); /* Use primary color background (blueish) */
+  color: var(--primary-color); /* Use primary color text */
+}
+
+.bond-version-badge.version-v1 {
+  background-color: rgba(100, 116, 139, 0.1); /* Use greyish background for older version */
+  color: var(--text-secondary); /* Use secondary text color */
+}
+
 /* Specific styles for each status */
 .status-vesting {
   background-color: rgba(251, 146, 60, 0.1); /* Example: Orange-ish for vesting */
