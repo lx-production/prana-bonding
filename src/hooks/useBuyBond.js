@@ -4,6 +4,7 @@ import { parseUnits, formatUnits } from 'viem';
 import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
 import { BOND_TERMS } from '../constants/bondTerms';
+import { calculateWbtcQuote, calculatePranaQuote } from '../utils/BuyBondPricing';
 
 const useBuyBond = () => {
     const { address, isConnected } = useAccount();
@@ -86,34 +87,30 @@ const useBuyBond = () => {
                     if (wbtcAmountWei === 0n) {
                         setCalculatedPrana('0');
                     } else {
-                        // Call the contract's calculatePranaAmount function directly
-                        const calculatedPranaWei = await publicClient.readContract({
-                            address: BUY_BOND_ADDRESS,
-                            abi: BUY_BOND_ABI,
-                            functionName: 'calculatePranaAmount',
-                            args: [wbtcAmountWei, selectedTermEnum]
+                        const { pranaQuote } = await calculatePranaQuote({
+                            wbtcAmountWei,
+                            period: selectedTermEnum,
+                            publicClient
                         });
-                        
-                        const formattedPrana = formatUnits(calculatedPranaWei, PRANA_DECIMALS);
+
+                        const formattedPrana = formatUnits(pranaQuote, PRANA_DECIMALS);
                         setCalculatedPrana(formattedPrana);
                     }
 
                 } else if (inputType === 'PRANA' && isValidPranaInput) {
                     const pranaAmountWei = parseUnits(pranaAmount, PRANA_DECIMALS);
 
-                     if (pranaAmountWei === 0n) {
+                    if (pranaAmountWei === 0n) {
                         setCalculatedWbtc('0');
                     } else {
-                        // Call the contract's calculateWbtcAmount function directly
-                        const finalWbtcAmountWei = await publicClient.readContract({
-                            address: BUY_BOND_ADDRESS,
-                            abi: BUY_BOND_ABI,
-                            functionName: 'calculateWbtcAmount',
-                            args: [pranaAmountWei, selectedTermEnum]
+                        const { wbtcQuote } = await calculateWbtcQuote({
+                            pranaAmountWei,
+                            period: selectedTermEnum,
+                            publicClient
                         });
 
-                        const formattedWbtc = formatUnits(finalWbtcAmountWei, WBTC_DECIMALS);
-                        setCalculatedWbtc(formattedWbtc); // Store the formatted string
+                    const formattedWbtc = formatUnits(wbtcQuote, WBTC_DECIMALS);
+                    setCalculatedWbtc(formattedWbtc);
                     }
                 } else {
                     setCalculatedPrana('0');
@@ -121,7 +118,6 @@ const useBuyBond = () => {
                 }
             } catch (err) {
                 console.error("Calculation error:", err);
-                setError("Lỗi tính toán giá trị."); // Set calculation-specific error
                 setCalculatedPrana('0');
                 setCalculatedWbtc('0');
             } finally {

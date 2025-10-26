@@ -32,7 +32,7 @@ function App() {
   return (
     <div className="container">
       <header className="header">
-        <h1 style={{ fontWeight: '800' }}>PRANA Bonding</h1>        
+        <h1 style={{ fontWeight: '800' }}>PRANA Bonding V2</h1>        
         <ConnectWallet />
       </header>
       
@@ -87,21 +87,41 @@ function App() {
       <footer className="footer">
         <p>©2025 PRANA Protocol</p>
         <a
-          href="https://polygonscan.com/address/0xA3adf8952982Eac60C0E43d6F93C66E7363c6Fe2"
+          href="https://polygonscan.com/address/0x431030e3a0703f0914be26026ffdad693f3a16cf#code"
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
         >
-          Buy Bond Contract
+          BuyBondV2
         </a>
+        <span style={{ marginLeft: '-12px' }}>
+          <a
+            href="https://polygonscan.com/address/0xA3adf8952982Eac60C0E43d6F93C66E7363c6Fe2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-link"
+          >
+            (V1)
+          </a>
+        </span>
         <a
-          href="https://polygonscan.com/address/0x2A48215e134a9382e1eBAf96F2Fa47Ca1c2fa092"
+          href="https://polygonscan.com/address/0xa6aa0662f5a37ec6e86b3390c46b6eba21a31f71"
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
         >
-          Sell Bond Contract
+          SellBondV2
         </a>      
+        <span style={{ marginLeft: '-12px' }}>
+          <a
+            href="https://polygonscan.com/address/0xA3adf8952982Eac60C0E43d6F93C66E7363c6Fe2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-link"
+          >
+            (V1)
+          </a>
+        </span>
         <div className="footer-links">          
           <a 
             href="https://github.com/lx-production/prana-bonding"
