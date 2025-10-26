@@ -56,7 +56,7 @@ const BuyBondBalance = () => {
 
   return (
     <div className="balance-container">
-      <h3>Buy Bond Contract Status</h3>
+      <h3>Buy Bond Status</h3>
       {isLoading ? (
         <p>Loading details...</p>
       ) : error ? (

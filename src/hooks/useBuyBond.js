@@ -19,12 +19,10 @@ const useBuyBond = () => {
     const [isCalculating, setIsCalculating] = useState(false); // For price calculation
     const [calculatedPrana, setCalculatedPrana] = useState('0'); // Calculated PRANA for WBTC input
     const [calculatedWbtc, setCalculatedWbtc] = useState('0'); // Calculated WBTC for PRANA input
-    const [approveTxHash, setApproveTxHash] = useState(null); // State to store the tx hash
     const [isWaitingForApprovalConfirmation, setIsWaitingForApprovalConfirmation] = useState(false);
     const [didSyncReservesFromWbtc, setDidSyncReservesFromWbtc] = useState(false);
     const [didSyncReservesFromPrana, setDidSyncReservesFromPrana] = useState(false);
     const [reserveWarning, setReserveWarning] = useState('');
-
     const { writeContractAsync, status: writeStatus } = useWriteContract();
     const publicClient = usePublicClient();
     
@@ -185,7 +183,6 @@ const useBuyBond = () => {
     const handleApprove = async () => {
         setError('');
         setSuccess('');
-        setApproveTxHash(null); // Reset previous hash
         setIsWaitingForApprovalConfirmation(false); // Reset waiting state
 
         const wbtcToApproveStr = inputType === 'PRANA' ? calculatedWbtc : wbtcAmount;
@@ -204,7 +201,6 @@ const useBuyBond = () => {
                 functionName: 'approve',
                 args: [BUY_BOND_ADDRESS, amountToApprove],
             });
-            setApproveTxHash(hash); // Store the hash
             setIsWaitingForApprovalConfirmation(true); // Start waiting
             setSuccess(`Approve transaction ${hash} sent. Waiting for confirmation...`);
 
@@ -404,7 +400,6 @@ const useBuyBond = () => {
         success,
         loading: isLoading, // Use the derived loading state
         isCalculating,
-        writeStatus,
         handleApprove,
         handleBuyBond,
         wbtcBalance,
@@ -412,7 +407,6 @@ const useBuyBond = () => {
         needsApproval,
         calculatedPranaForWbtc: calculatedPrana,
         calculatedWbtcForPrana: calculatedWbtc,
-        approveTxHash,
         isWaitingForApprovalConfirmation,
         isValidWbtcInput,
         isValidPranaInput,

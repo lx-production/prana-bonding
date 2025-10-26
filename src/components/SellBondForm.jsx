@@ -16,7 +16,6 @@ const SellBondForm = () => {
         // isLoading now covers both sending and waiting for confirmation
         loading: isLoading,
         isCalculating,
-        // writeStatus, // Might not be needed directly
         handleApprove,
         handleSellBond,
         pranaBalance,
@@ -26,6 +25,7 @@ const SellBondForm = () => {
         isWaitingForApprovalConfirmation,
         isValidPranaInput,
         didSyncReserves,
+        reserveWarning,
     } = useSellBond();
 
     if (!isConnected) return <p>Vui lòng kết nối ví của bạn.</p>;
@@ -70,14 +70,20 @@ const SellBondForm = () => {
                         className="form-input"
                     />
                     {/* Show calculated WBTC if input is valid */}
-                    {isValidPranaInput && ( // Use validity check
-                        <div className="calculated-amount">
-                            Sẽ nhận được: <strong>{displayReceivedWbtc}</strong>
-                            {didSyncReserves && (
-                                <span className="sync-tag">(Đã đồng bộ dự trữ thị trường)</span>
-                            )}
-                        </div>
-                    )}
+                {isValidPranaInput && (
+                    <div className="calculated-amount">
+                        {reserveWarning ? (
+                            <div style={{ color: 'red', fontSize: '14px' }}>{reserveWarning}</div>
+                        ) : (
+                            <>
+                                Sẽ nhận được: <strong>{displayReceivedWbtc}</strong>
+                                {didSyncReserves && (
+                                    <span className="sync-tag">(Đã đồng bộ dự trữ thị trường)</span>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
                 </div>
             </div>
 

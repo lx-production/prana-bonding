@@ -60,7 +60,7 @@ const SellBondBalance = () => {
 
   return (
     <div className="balance-container">
-      <h3>Sell Bond Contract Status</h3>
+      <h3>Sell Bond Status</h3>
       {isLoading ? (
         <p>Loading details...</p>
       ) : error ? (

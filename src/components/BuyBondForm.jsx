@@ -31,7 +31,6 @@ const BuyBondForm = () => {
         didSyncReservesFromWbtc,
         didSyncReservesFromPrana,
         reserveWarning,
-        // approveTxHash,
     } = useBuyBond();
 
     if (!isConnected) return <p>Vui lòng kết nối ví của bạn.</p>;
@@ -94,7 +93,7 @@ const BuyBondForm = () => {
                     {inputType === 'PRANA' && pranaAmount && parseFloat(pranaAmount) > 0 && (
                         <div className="calculated-amount">
                             {reserveWarning ? (
-                                <div className="warning-message">{reserveWarning}</div>
+                                <div style={{ color: 'red', fontSize: '14px' }}>{reserveWarning}</div>
                             ) : (
                                 <>
                                     Cần trả: <strong>{displayRequiredWbtc}</strong>

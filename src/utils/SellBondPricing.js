@@ -2,6 +2,8 @@ import { FullMath } from './FullMath';
 import { SELL_BOND_ADDRESS, SELL_BOND_ABI } from '../constants/sellBondContract';
 import { WBTC_PRANA_V3_POOL, V3_POOL_SLOT0_ABI, V3_POOL_LIQUIDITY_ABI } from '../constants/sharedContracts';
 
+const RESERVE_WARNING_MESSAGE = 'Lượng PRANA muốn bán vượt quá mức ngân quỹ có thể mua.';
+
 const toBigInt = (value) => {
   if (typeof value === 'bigint') return value;
   if (typeof value === 'number') return BigInt(Math.trunc(value));
@@ -123,22 +125,29 @@ const computeMarketWbtc = (poolWbtc, poolPrana, netPranaAmount) => {
 
 export const calculateWbtcQuote = async ({ pranaAmountWei, period, publicClient }) => {
   if (!publicClient) {
-    return { wbtcQuote: 0n, reservesSynced: false };
+    return { wbtcQuote: 0n, reservesSynced: false, warning: '' };
   }
 
   const pranaAmount = toBigInt(pranaAmountWei);
   if (pranaAmount <= 0n) {
-    return { wbtcQuote: 0n, reservesSynced: false };
+    return { wbtcQuote: 0n, reservesSynced: false, warning: '' };
   }
 
   const netPranaAmount = FullMath.mulDiv(pranaAmount, 99n, 100n);
   if (netPranaAmount <= 0n) {
-    return { wbtcQuote: 0n, reservesSynced: false };
+    return { wbtcQuote: 0n, reservesSynced: false, warning: '' };
   }
 
   const { impactedWbtcReserve, impactedPranaReserve } = await fetchImpactedReserves(publicClient);
-  const impactedWbtcSafe = ensurePositiveReserve(impactedWbtcReserve);
-  const impactedPranaSafe = ensurePositiveReserve(impactedPranaReserve);
+  const impactedWbtcBig = toBigInt(impactedWbtcReserve);
+  const impactedPranaBig = toBigInt(impactedPranaReserve);
+
+  if (netPranaAmount > impactedPranaBig) {
+    return { wbtcQuote: 0n, reservesSynced: false, warning: RESERVE_WARNING_MESSAGE };
+  }
+
+  const impactedWbtcSafe = ensurePositiveReserve(impactedWbtcBig);
+  const impactedPranaSafe = ensurePositiveReserve(impactedPranaBig);
 
   let regularBaseline = computeRegularWbtcFromImpacted(
     impactedWbtcSafe,
@@ -147,15 +156,22 @@ export const calculateWbtcQuote = async ({ pranaAmountWei, period, publicClient 
   );
 
   const { poolWbtcReserve, poolPranaReserve } = await fetchPoolReserves(publicClient);
-  const poolWbtcSafe = ensurePositiveReserve(poolWbtcReserve);
-  const poolPranaSafe = ensurePositiveReserve(poolPranaReserve);
+  const poolWbtcBig = toBigInt(poolWbtcReserve);
+  const poolPranaBig = toBigInt(poolPranaReserve);
+
+  if (netPranaAmount > poolPranaBig) {
+    return { wbtcQuote: 0n, reservesSynced: false, warning: RESERVE_WARNING_MESSAGE };
+  }
+
+  const poolWbtcSafe = ensurePositiveReserve(poolWbtcBig);
+  const poolPranaSafe = ensurePositiveReserve(poolPranaBig);
 
   const marketWbtc = computeMarketWbtc(poolWbtcSafe, poolPranaSafe, netPranaAmount);
   let reservesSynced = false;
 
   if (regularBaseline === null) {
     if (marketWbtc === null) {
-      return { wbtcQuote: 0n, reservesSynced: false };
+      return { wbtcQuote: 0n, reservesSynced: false, warning: RESERVE_WARNING_MESSAGE };
     }
     regularBaseline = marketWbtc;
     reservesSynced = true;
@@ -174,7 +190,7 @@ export const calculateWbtcQuote = async ({ pranaAmountWei, period, publicClient 
   const premiumRate = BigInt(rate);
   const wbtcQuote = FullMath.mulDiv(regularBaseline, 10000n + premiumRate, 10000n);
 
-  return { wbtcQuote, reservesSynced };
+  return { wbtcQuote, reservesSynced, warning: '' };
 };
 
 
