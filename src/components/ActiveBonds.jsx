@@ -2,18 +2,8 @@ import PropTypes from 'prop-types';
 import { useMemo } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import useActiveBuyBonds from '../hooks/useActiveBuyBonds';
-import {
-  BUY_BOND_ADDRESS_V1,
-  BUY_BOND_ABI_V1,
-  BUY_BOND_ADDRESS_V2,
-  BUY_BOND_ABI_V2,
-} from '../constants/buyBondContract';
-import {
-  SELL_BOND_ADDRESS_V1,
-  SELL_BOND_ABI_V1,
-  SELL_BOND_ADDRESS_V2,
-  SELL_BOND_ABI_V2,
-} from '../constants/sellBondContract';
+import { BUY_BOND_ADDRESS_V1, BUY_BOND_ABI_V1, BUY_BOND_ADDRESS_V2, BUY_BOND_ABI_V2 } from '../constants/buyBondContract';
+import { SELL_BOND_ADDRESS_V1, SELL_BOND_ABI_V1, SELL_BOND_ADDRESS_V2, SELL_BOND_ABI_V2 } from '../constants/sellBondContract';
 import useActiveSellBonds from '../hooks/useActiveSellBonds';
 
 // Simple loading indicator

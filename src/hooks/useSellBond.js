@@ -58,6 +58,15 @@ const useSellBond = () => {
   const minPranaSellAmountFormatted = minSellAmountData ? formatUnits(minSellAmountData, PRANA_DECIMALS) : '0';
   const minPranaSellAmountWei = minSellAmountData ? BigInt(minSellAmountData) : BigInt(0);
   
+  // Lazily refetch the user's active sell bonds when needed (shares cache with ActiveBonds component)
+  const { refetch: refetchActiveSellBonds } = useReadContract({
+    address: SELL_BOND_ADDRESS,
+    abi: SELL_BOND_ABI,
+    functionName: 'getUserActiveBonds',
+    args: address ? [address] : undefined,
+    enabled: false,
+  });
+  
   // --- Calculations ---
   
   const isValidPranaInput = useMemo(() => pranaAmount && !isNaN(parseFloat(pranaAmount)) && parseFloat(pranaAmount) > 0, [pranaAmount]);
@@ -222,7 +231,13 @@ const useSellBond = () => {
       setPranaAmount(''); // Reset input
       setCalculatedWbtc('0'); // Reset calculation
       refetchAllowance(); // Refetch allowance as it might have changed implicitly
-      // TODO: Consider refetching user's bond list here
+      if (address) {
+        setTimeout(() => {
+          refetchActiveSellBonds({ args: [address] }).catch((refetchErr) => {
+            console.error('Failed to refetch active sell bonds:', refetchErr);
+          });
+        }, 1000);
+      }
     } catch (err) {
       console.error("Sell bond error:", err);
       let errorMsg = 'Bán bond thất bại';
