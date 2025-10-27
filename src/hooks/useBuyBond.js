@@ -62,6 +62,15 @@ const useBuyBond = () => {
   const minPranaBuyAmountFormatted = minBuyAmountData ? formatUnits(minBuyAmountData, PRANA_DECIMALS) : '0';
   const minPranaBuyAmountWei = minBuyAmountData ? BigInt(minBuyAmountData) : BigInt(0);    
   
+  // Lazily refetch the user's active buy bonds when actions complete (shares cache with ActiveBonds component)
+  const { refetch: refetchActiveBuyBonds } = useReadContract({
+    address: BUY_BOND_ADDRESS,
+    abi: BUY_BOND_ABI,
+    functionName: 'getUserActiveBonds',
+    args: address ? [address] : undefined,
+    enabled: false,
+  });
+  
   // --- Calculations (Client-side) ---
   
   const isValidWbtcInput = useMemo(() => wbtcAmount && !isNaN(parseFloat(wbtcAmount)) && parseFloat(wbtcAmount) > 0, [wbtcAmount]);
@@ -317,7 +326,13 @@ const useBuyBond = () => {
       setCalculatedPrana('0'); // Reset calculated values
       setCalculatedWbtc('0');
       refetchAllowance(); // Refetch allowance
-      // TODO: Consider refetching user's bond list here
+      if (address) {
+        setTimeout(() => {
+          refetchActiveBuyBonds({ args: [address] }).catch((refetchErr) => {
+            console.error('Failed to refetch active buy bonds:', refetchErr);
+          });
+        }, 1000);
+      }
     } catch (err) {
       console.error("Buy bond error:", err);
       // Xử lý lỗi tương tự useStaking.js
