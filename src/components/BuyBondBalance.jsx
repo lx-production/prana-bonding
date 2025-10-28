@@ -1,10 +1,13 @@
+import { useMemo } from 'react';
 import { useReadContract } from 'wagmi';
-import { formatUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import { BUY_BOND_ADDRESS_V1, BUY_BOND_ADDRESS_V2, BUY_BOND_ABI_V1, BUY_BOND_ABI_V2 } from '../constants/buyBondContract';
 import { BUY_BOND_BONDS_ABI } from '../constants/bondVolumeFragments';
 import { PRANA_ADDRESS, PRANA_ABI, PRANA_DECIMALS } from '../constants/sharedContracts'; // Use PRANA token details for balance check
 import { useCommittedPrana } from '../hooks/useCommittedPrana';
 import { useTotalBondPranaVolume } from '../hooks/useTotalBondPranaVolume';
+
+const BUY_BOND_V1_TOTAL_VOLUME_RAW = parseUnits('145235', PRANA_DECIMALS);
 
 const BuyBondBalance = () => {
   // Fetch the balance of PRANA tokens held by the BUY_BOND_ADDRESS
@@ -47,15 +50,19 @@ const BuyBondBalance = () => {
     console.error("Committed Prana V2 error:", committedErrorV2);
   }
 
+  const bondContracts = useMemo(
+    () => [
+      { address: BUY_BOND_ADDRESS_V2, abi: BUY_BOND_ABI_V2, bondAbi: BUY_BOND_BONDS_ABI },
+    ],
+    []
+  );
+
   const {
-    totalPranaFormatted: totalBondVolume,
+    totalPranaRaw: totalBondVolumeRawV2,
     isLoading: isLoadingVolume,
     error: bondVolumeError,
   } = useTotalBondPranaVolume({
-    contracts: [
-      { address: BUY_BOND_ADDRESS_V1, abi: BUY_BOND_ABI_V1, bondAbi: BUY_BOND_BONDS_ABI },
-      { address: BUY_BOND_ADDRESS_V2, abi: BUY_BOND_ABI_V2, bondAbi: BUY_BOND_BONDS_ABI },
-    ],
+    contracts: bondContracts,
     fieldName: 'pranaAmount',
     decimals: PRANA_DECIMALS,
   });
@@ -67,6 +74,8 @@ const BuyBondBalance = () => {
   const formattedBalance = formatUnits(totalBalance, PRANA_DECIMALS);
   const totalCommittedRaw = (committedPranaRawV1 || 0n) + (committedPranaRawV2 || 0n);
   const totalCommitted = formatUnits(totalCommittedRaw, PRANA_DECIMALS);
+  const totalBondVolumeRaw = (totalBondVolumeRawV2 || 0n) + BUY_BOND_V1_TOTAL_VOLUME_RAW;
+  const totalBondVolume = formatUnits(totalBondVolumeRaw, PRANA_DECIMALS);
 
   return (
     <div className="balance-container">
@@ -84,7 +93,7 @@ const BuyBondBalance = () => {
             Committed: <span className="balance">{totalCommitted}</span> <span className="token-symbol">PRANA</span>
           </p>
           <p>
-            Total Buy Bond Volume: <span className="balance">{totalBondVolume}</span> <span className="token-symbol">PRANA</span>
+            Total Volume: <span className="balance">{totalBondVolume}</span> <span className="token-symbol">PRANA</span>
           </p>
         </>
       )}

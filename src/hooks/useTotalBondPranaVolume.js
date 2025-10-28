@@ -3,7 +3,7 @@ import { usePublicClient } from 'wagmi';
 import { formatUnits } from 'viem';
 import { PRANA_DECIMALS } from '../constants/sharedContracts';
 
-const START_INDEX = 1n;
+const START_INDEX = 0n;
 
 const getErrorMessage = (error) => {
   if (!error) return '';
@@ -26,6 +26,7 @@ const isOutOfRangeError = (error) => {
     message.includes('out of bounds') ||
     message.includes('out-of-bounds') ||
     message.includes('missing revert data') ||
+    message.includes('the contract function "bonds" reverted') ||
     message.includes('panic code 0x32') ||
     message.includes('panic: 0x32') ||
     message.includes('array empty') ||
