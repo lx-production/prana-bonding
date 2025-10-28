@@ -1,9 +1,9 @@
-import PropTypes from 'prop-types';
 import { useMemo } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
-import useActiveBuyBonds from '../hooks/useActiveBuyBonds';
 import { BUY_BOND_ADDRESS_V1, BUY_BOND_ABI_V1, BUY_BOND_ADDRESS_V2, BUY_BOND_ABI_V2 } from '../constants/buyBondContract';
 import { SELL_BOND_ADDRESS_V1, SELL_BOND_ABI_V1, SELL_BOND_ADDRESS_V2, SELL_BOND_ABI_V2 } from '../constants/sellBondContract';
+import PropTypes from 'prop-types';
+import useActiveBuyBonds from '../hooks/useActiveBuyBonds';
 import useActiveSellBonds from '../hooks/useActiveSellBonds';
 
 // Simple loading indicator
@@ -31,7 +31,7 @@ const ActiveBonds = () => {
     data: activeBuyBondsData,
     error: fetchBuyError,
     isLoading: isFetchingBuyBonds,
-    refetch: refetchBuyBonds // Function to refetch bond data
+    refetch: refetchBuyBonds
   } = useReadContract({
     address: BUY_BOND_ADDRESS_V2,
     abi: BUY_BOND_ABI_V2,
@@ -59,7 +59,7 @@ const ActiveBonds = () => {
     data: activeSellBondsData,
     error: fetchSellError,
     isLoading: isFetchingSellBonds,
-    refetch: refetchSellBonds // Function to refetch bond data
+    refetch: refetchSellBonds
   } = useReadContract({
     address: SELL_BOND_ADDRESS_V2,
     abi: SELL_BOND_ABI_V2,
@@ -145,8 +145,8 @@ const ActiveBonds = () => {
   const fetchError = fetchBuyError || fetchSellError || fetchBuyErrorV1 || fetchSellErrorV1;
 
   const actionLoadingBondId = buyActionLoading.bondId ?? sellActionLoading.bondId ?? buyActionLoadingV1.bondId ?? sellActionLoadingV1.bondId;
-  const actionLoadingType = buyActionLoading.bondId
-    ? 'buy-v2'
+  const actionLoadingType = buyActionLoading.bondId // checking if buyActionLoading.bondId has a value
+    ? 'buy-v2' // if it has a value, return 'buy-v2'
     : sellActionLoading.bondId
       ? 'sell-v2'
       : buyActionLoadingV1.bondId
