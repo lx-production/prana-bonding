@@ -93,7 +93,7 @@ const BuyBondBalance = () => {
             Committed: <span className="balance">{totalCommitted}</span> <span className="token-symbol">PRANA</span>
           </p>
           <p>
-            Total Volume: <span className="balance">{totalBondVolume}</span> <span className="token-symbol">PRANA</span>
+            Total Volume (v1 + v2): <span className="balance">{totalBondVolume}</span> <span className="token-symbol">PRANA</span>
           </p>
         </>
       )}
