@@ -1,13 +1,10 @@
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import {
-  SELL_BOND_ADDRESS_V1,
-  SELL_BOND_ADDRESS_V2,
-  SELL_BOND_ABI_V1,
-  SELL_BOND_ABI_V2,
-} from '../constants/sellBondContract';
-import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS } from '../constants/sharedContracts'; // Use PRANA token details for balance check
+import { SELL_BOND_ADDRESS_V1, SELL_BOND_ADDRESS_V2, SELL_BOND_ABI_V1, SELL_BOND_ABI_V2 } from '../constants/sellBondContract';
+import { SELL_BOND_BONDS_ABI } from '../constants/bondVolumeFragments';
+import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts'; // Use PRANA token details for balance check
 import { useCommittedWbtc } from '../hooks/useCommittedWbtc'; // Import the new hook
+import { useTotalBondPranaVolume } from '../hooks/useTotalBondPranaVolume';
 
 const SellBondBalance = () => {
   // Fetch the balance of PRANA tokens held by the BUY_BOND_ADDRESS
@@ -50,8 +47,21 @@ const SellBondBalance = () => {
     console.error("Committed Wbtc V2 error:", committedErrorV2);
   }
 
-  const isLoading = isLoadingBalanceV1 || isLoadingBalanceV2 || isLoadingCommittedV1 || isLoadingCommittedV2;
-  const error = balanceErrorV1 || balanceErrorV2 || committedErrorV1 || committedErrorV2;
+  const {
+    totalPranaFormatted: totalBondVolume,
+    isLoading: isLoadingVolume,
+    error: bondVolumeError,
+  } = useTotalBondPranaVolume({
+    contracts: [
+      { address: SELL_BOND_ADDRESS_V1, abi: SELL_BOND_ABI_V1, bondAbi: SELL_BOND_BONDS_ABI },
+      { address: SELL_BOND_ADDRESS_V2, abi: SELL_BOND_ABI_V2, bondAbi: SELL_BOND_BONDS_ABI },
+    ],
+    fieldName: 'pranaAmount',
+    decimals: PRANA_DECIMALS,
+  });
+
+  const isLoading = isLoadingBalanceV1 || isLoadingBalanceV2 || isLoadingCommittedV1 || isLoadingCommittedV2 || isLoadingVolume;
+  const error = balanceErrorV1 || balanceErrorV2 || committedErrorV1 || committedErrorV2 || bondVolumeError;
 
   const totalBalance = (balanceV1 || 0n) + (balanceV2 || 0n);
   const totalCommittedRaw = (committedWbtcRawV1 || 0n) + (committedWbtcRawV2 || 0n);
@@ -72,6 +82,9 @@ const SellBondBalance = () => {
           </p>
           <p>
             Committed: <span className="balance">{totalCommitted}</span> <span className="token-symbol">WBTC</span>
+          </p>
+          <p>
+            Total Sell Bond Volume: <span className="balance">{totalBondVolume}</span> <span className="token-symbol">PRANA</span>
           </p>
         </>
       )}

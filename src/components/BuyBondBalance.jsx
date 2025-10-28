@@ -1,8 +1,10 @@
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
 import { BUY_BOND_ADDRESS_V1, BUY_BOND_ADDRESS_V2, BUY_BOND_ABI_V1, BUY_BOND_ABI_V2 } from '../constants/buyBondContract';
+import { BUY_BOND_BONDS_ABI } from '../constants/bondVolumeFragments';
 import { PRANA_ADDRESS, PRANA_ABI, PRANA_DECIMALS } from '../constants/sharedContracts'; // Use PRANA token details for balance check
 import { useCommittedPrana } from '../hooks/useCommittedPrana';
+import { useTotalBondPranaVolume } from '../hooks/useTotalBondPranaVolume';
 
 const BuyBondBalance = () => {
   // Fetch the balance of PRANA tokens held by the BUY_BOND_ADDRESS
@@ -45,8 +47,21 @@ const BuyBondBalance = () => {
     console.error("Committed Prana V2 error:", committedErrorV2);
   }
 
-  const isLoading = isLoadingBalanceV1 || isLoadingBalanceV2 || isLoadingCommittedV1 || isLoadingCommittedV2;
-  const error = balanceErrorV1 || balanceErrorV2 || committedErrorV1 || committedErrorV2;
+  const {
+    totalPranaFormatted: totalBondVolume,
+    isLoading: isLoadingVolume,
+    error: bondVolumeError,
+  } = useTotalBondPranaVolume({
+    contracts: [
+      { address: BUY_BOND_ADDRESS_V1, abi: BUY_BOND_ABI_V1, bondAbi: BUY_BOND_BONDS_ABI },
+      { address: BUY_BOND_ADDRESS_V2, abi: BUY_BOND_ABI_V2, bondAbi: BUY_BOND_BONDS_ABI },
+    ],
+    fieldName: 'pranaAmount',
+    decimals: PRANA_DECIMALS,
+  });
+
+  const isLoading = isLoadingBalanceV1 || isLoadingBalanceV2 || isLoadingCommittedV1 || isLoadingCommittedV2 || isLoadingVolume;
+  const error = balanceErrorV1 || balanceErrorV2 || committedErrorV1 || committedErrorV2 || bondVolumeError;
 
   const totalBalance = (balanceV1 || 0n) + (balanceV2 || 0n);
   const formattedBalance = formatUnits(totalBalance, PRANA_DECIMALS);
@@ -67,6 +82,9 @@ const BuyBondBalance = () => {
           </p>
           <p>
             Committed: <span className="balance">{totalCommitted}</span> <span className="token-symbol">PRANA</span>
+          </p>
+          <p>
+            Total Buy Bond Volume: <span className="balance">{totalBondVolume}</span> <span className="token-symbol">PRANA</span>
           </p>
         </>
       )}
