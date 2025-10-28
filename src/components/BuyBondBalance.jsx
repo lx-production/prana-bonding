@@ -49,10 +49,9 @@ const BuyBondBalance = () => {
   const error = balanceErrorV1 || balanceErrorV2 || committedErrorV1 || committedErrorV2;
 
   const totalBalance = (balanceV1 || 0n) + (balanceV2 || 0n);
+  const formattedBalance = formatUnits(totalBalance, PRANA_DECIMALS);
   const totalCommittedRaw = (committedPranaRawV1 || 0n) + (committedPranaRawV2 || 0n);
   const totalCommitted = formatUnits(totalCommittedRaw, PRANA_DECIMALS);
-
-  const formattedBalance = formatUnits(totalBalance, PRANA_DECIMALS);
 
   return (
     <div className="balance-container">
