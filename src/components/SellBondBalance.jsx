@@ -93,7 +93,7 @@ const SellBondBalance = () => {
             Committed: <span className="balance">{totalCommitted}</span> <span className="token-symbol">WBTC</span>
           </p>
           <p>
-            Total Volume (v1 + v2): <span className="balance">{totalBondVolume}</span> <span className="token-symbol">PRANA</span>
+            Total Volume (V1 + V2): <span className="balance">{totalBondVolume}</span> <span className="token-symbol">PRANA</span>
           </p>
         </>
       )}
