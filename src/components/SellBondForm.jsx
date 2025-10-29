@@ -76,7 +76,7 @@ const SellBondForm = () => {
                             <div style={{ color: 'red', fontSize: '14px' }}>{reserveWarning}</div>
                         ) : (
                             <>
-                                Sẽ nhận được: <strong>{displayReceivedWbtc}</strong>
+                                Nhận được: <strong>{displayReceivedWbtc}</strong>
                                 {didSyncReserves && (
                                     <span className="sync-tag">(Đã đồng bộ dự trữ thị trường)</span>
                                 )}
