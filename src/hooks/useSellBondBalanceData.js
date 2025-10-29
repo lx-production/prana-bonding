@@ -1,15 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { useReadContract } from 'wagmi';
 import { formatUnits, parseUnits } from 'viem';
-
-import {
-  SELL_BOND_ADDRESS_V1,
-  SELL_BOND_ADDRESS_V2,
-  SELL_BOND_ABI_V1,
-  SELL_BOND_ABI_V2,
-} from '../constants/sellBondContract';
+import { SELL_BOND_ADDRESS_V1, SELL_BOND_ADDRESS_V2, SELL_BOND_ABI_V1, SELL_BOND_ABI_V2 } from '../constants/sellBondContract';
 import { SELL_BOND_BONDS_ABI } from '../constants/bondVolumeFragments';
-import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
+import { WBTC_ADDRESS, WBTC_ABI, PRANA_DECIMALS } from '../constants/sharedContracts';
 import { useCommittedWbtc } from './useCommittedWbtc';
 import { useTotalBondPranaVolume } from './useTotalBondPranaVolume';
 
@@ -19,6 +13,10 @@ const formatBigIntValue = (value) => {
   const stringValue = value.toString();
   return stringValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
+
+const pranaFormatter = new Intl.NumberFormat(undefined, {
+  maximumFractionDigits: 0,
+});
 
 export const useSellBondBalanceData = () => {
   const {
@@ -115,33 +113,54 @@ export const useSellBondBalanceData = () => {
   const formattedBondVolume = formatUnits(totalBondVolumeRaw, PRANA_DECIMALS);
 
   const metrics = useMemo(
-    () => [
-      {
-        key: 'balance',
-        label: 'Balance',
-        formattedValue: formattedBalanceSat,
-        numericValue: Number(totalBalanceRaw),
-        rawValue: totalBalanceRaw,
-      },
-      {
-        key: 'committed',
-        label: 'Committed',
-        formattedValue: formattedCommittedSat,
-        numericValue: Number(totalCommittedRaw),
-        rawValue: totalCommittedRaw,
-      },
-      {
-        key: 'totalVolume',
-        label: 'Total Volume (V1 + V2)',
-        formattedValue: formattedBondVolume,
-        numericValue: Number.parseFloat(formattedBondVolume),
-        rawValue: totalBondVolumeRaw,
-      },
-    ],
+    () => {
+      const parseAndRound = (value) => {
+        const numeric = Number.parseFloat(value);
+        if (!Number.isFinite(numeric)) {
+          return {
+            numericValue: 0,
+            formattedValue: pranaFormatter.format(0),
+          };
+        }
+
+        const rounded = Math.round(numeric);
+        return {
+          numericValue: rounded,
+          formattedValue: pranaFormatter.format(rounded),
+        };
+      };
+
+      const totalVolume = parseAndRound(formattedBondVolume);
+
+      return [
+        {
+          key: 'balance',
+          label: 'Balance',
+          formattedValue: formattedBalanceSat,
+          numericValue: Number(totalBalanceRaw),
+          rawValue: totalBalanceRaw,
+        },
+        {
+          key: 'committed',
+          label: 'Committed',
+          formattedValue: formattedCommittedSat,
+          numericValue: Number(totalCommittedRaw),
+          rawValue: totalCommittedRaw,
+        },
+        {
+          key: 'totalVolume',
+          label: 'Total Volume (V1 + V2)',
+          formattedValue: totalVolume.formattedValue,
+          numericValue: totalVolume.numericValue,
+          rawValue: totalBondVolumeRaw,
+        },
+      ];
+    },
     [
       formattedBalanceSat,
       formattedCommittedSat,
       formattedBondVolume,
+      pranaFormatter,
       totalBalanceRaw,
       totalCommittedRaw,
       totalBondVolumeRaw,
