@@ -114,7 +114,7 @@ function App() {
         </a>      
         <span style={{ marginLeft: '-12px' }}>
           <a
-            href="https://polygonscan.com/address/0xA3adf8952982Eac60C0E43d6F93C66E7363c6Fe2"
+            href="https://polygonscan.com/address/0x2A48215e134a9382e1eBAf96F2Fa47Ca1c2fa092"
             target="_blank"
             rel="noopener noreferrer"
             className="footer-link"

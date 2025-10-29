@@ -144,7 +144,7 @@ button {
   background-color: var(--surface-color);
   border-radius: 0.5rem;
   box-shadow: var(--card-shadow);
-  padding: 7%;
+  padding: 2rem;
   margin-bottom: 1rem;
 }
 
@@ -1006,5 +1006,82 @@ button {
     padding: 0.75rem 1rem;
     white-space: nowrap;
   }
+}
+
+.donut-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.donut-chart__graphic {
+  position: relative;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--card-shadow);
+}
+
+.donut-chart__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--surface-color);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.donut-chart__center-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.donut-chart__center-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.donut-chart__legend {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.donut-chart__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.donut-chart__legend-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+}
+
+.donut-chart__legend-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.donut-chart__legend-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.donut-chart__legend-value {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
 }
 
