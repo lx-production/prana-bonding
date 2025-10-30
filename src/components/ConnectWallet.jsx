@@ -1,12 +1,16 @@
 import { useConnect, useAccount, useDisconnect } from 'wagmi';
 
 const ConnectWallet = () => {
-  const { connect, connectors, isLoading, } = useConnect();
+  const { connect, connectors, isLoading } = useConnect();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
 
-  // Find the injected connector (MetaMask)
-  const injectedConnector = connectors.find(c => c.id === 'injected');
+  // Prefer an injected wallet if usable, otherwise fall back to the first available connector.
+  const readyConnectors =
+    connectors?.filter(connector => connector && connector.ready !== false) ?? [];
+  const preferredConnector =
+    readyConnectors.find(connector => connector.id === 'injected') ?? readyConnectors[0];
+  const canConnect = Boolean(preferredConnector);
 
   if (isConnected) {
     return (
@@ -23,20 +27,29 @@ const ConnectWallet = () => {
   }
 
   return (
-    <button
-      className="btn-primary"
-      onClick={() => connect({ connector: injectedConnector })}
-      disabled={isLoading}
-    >
-      {isLoading ? (
-        <>
-          <span className="loading"></span>
-          Connecting...
-        </>
-      ) : (
-        'Connect Wallet'
+    <div className="wallet-container">
+      <button
+        className="btn-primary"
+        onClick={() => preferredConnector && connect({ connector: preferredConnector })}
+        disabled={isLoading || !canConnect}
+      >
+        {isLoading ? (
+          <>
+            <span className="loading"></span>
+            Connecting...
+          </>
+        ) : canConnect ? (
+          'Connect Wallet'
+        ) : (
+          'No Wallet Detected'
+        )}
+      </button>
+      {!canConnect && (
+        <p className="wallet-helper-text">
+          Install a compatible wallet (e.g. MetaMask) or use a WalletConnect-enabled app.
+        </p>
       )}
-    </button>
+    </div>
   );
 };
 
