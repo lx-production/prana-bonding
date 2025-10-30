@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
@@ -25,6 +25,14 @@ const useBuyBond = () => {
   const [reserveWarning, setReserveWarning] = useState('');
   const { writeContractAsync, status: writeStatus } = useWriteContract();
   const publicClient = usePublicClient();
+  // We track the latest quote calculation so that only the freshest async
+  // response mutates state. Before adding this guard a slow RPC response could
+  // overwrite the UI with an outdated quote that no longer matched the user's
+  // current inputs, which is why quotes appeared to "jump" back in time while
+  // typing. Incrementing the request id for every recalculation lets us ignore
+  // any stale responses that resolve after the user has already changed the
+  // amount or term.
+  const calculationRequestIdRef = useRef(0);
   
   const selectedTermEnum = termIndex; // Enum trong contract thường bắt đầu từ 0
   
@@ -78,29 +86,40 @@ const useBuyBond = () => {
   
   // Calculation effect - runs when inputs change
   useEffect(() => {
-    const calculateAmounts = async () => {
-      // Check if we have all required dependencies
-      if (!isConnected || !publicClient) {
-        setCalculatedPrana('0');
-        setCalculatedWbtc('0');
-        setDidSyncReservesFromWbtc(false);
-        setDidSyncReservesFromPrana(false);
-        setReserveWarning('');
-        return; // Not ready yet
-      }
-      
-      setIsCalculating(true);
-      setCalculatedPrana('0'); // Reset previous calculations
+    calculationRequestIdRef.current += 1;
+    const requestId = calculationRequestIdRef.current;
+
+    const isLatestRequest = () => calculationRequestIdRef.current === requestId;
+
+    const resetCalculatedState = () => {
+      if (!isLatestRequest()) return;
+      setCalculatedPrana('0');
       setCalculatedWbtc('0');
       setDidSyncReservesFromWbtc(false);
       setDidSyncReservesFromPrana(false);
       setReserveWarning('');
-      
-      try {
-        if (inputType === 'WBTC' && isValidWbtcInput) {
+    };
+
+    const calculateAmounts = async () => {
+      if (!isConnected || !publicClient) {
+        resetCalculatedState();
+        if (isLatestRequest()) {
+          setIsCalculating(false);
+        }
+        return;
+      }
+
+      if (inputType === 'WBTC' && isValidWbtcInput) {
+        if (!isLatestRequest()) return;
+        setIsCalculating(true);
+        resetCalculatedState();
+
+        try {
           const wbtcAmountWei = parseUnits(wbtcAmount, WBTC_DECIMALS);
-          
+          if (!isLatestRequest()) return;
+
           if (wbtcAmountWei === 0n) {
+            if (!isLatestRequest()) return;
             setCalculatedPrana('0');
             setDidSyncReservesFromWbtc(false);
           } else {
@@ -109,7 +128,9 @@ const useBuyBond = () => {
               period: selectedTermEnum,
               publicClient
             });
-            
+
+            if (!isLatestRequest()) return;
+
             if (warning) {
               setReserveWarning(warning);
               setCalculatedPrana('0');
@@ -121,11 +142,32 @@ const useBuyBond = () => {
               setReserveWarning('');
             }
           }
-          
-        } else if (inputType === 'PRANA' && isValidPranaInput) {
+        } catch (err) {
+          console.error("Calculation error:", err);
+          if (isLatestRequest()) {
+            setCalculatedPrana('0');
+            setDidSyncReservesFromWbtc(false);
+            setReserveWarning('');
+          }
+        } finally {
+          if (isLatestRequest()) {
+            setIsCalculating(false);
+          }
+        }
+        return;
+      }
+
+      if (inputType === 'PRANA' && isValidPranaInput) {
+        if (!isLatestRequest()) return;
+        setIsCalculating(true);
+        resetCalculatedState();
+
+        try {
           const pranaAmountWei = parseUnits(pranaAmount, PRANA_DECIMALS);
-          
+          if (!isLatestRequest()) return;
+
           if (pranaAmountWei === 0n) {
+            if (!isLatestRequest()) return;
             setCalculatedWbtc('0');
             setDidSyncReservesFromPrana(false);
             setReserveWarning('');
@@ -135,7 +177,9 @@ const useBuyBond = () => {
               period: selectedTermEnum,
               publicClient
             });
-            
+
+            if (!isLatestRequest()) return;
+
             if (warning) {
               setReserveWarning(warning);
               setCalculatedWbtc('0');
@@ -147,35 +191,42 @@ const useBuyBond = () => {
               setReserveWarning('');
             }
           }
-        } else {
-          setCalculatedPrana('0');
-          setCalculatedWbtc('0');
-          setDidSyncReservesFromWbtc(false);
-          setDidSyncReservesFromPrana(false);
-          setReserveWarning('');
+        } catch (err) {
+          console.error("Calculation error:", err);
+          if (isLatestRequest()) {
+            setCalculatedWbtc('0');
+            setDidSyncReservesFromPrana(false);
+            setReserveWarning('');
+          }
+        } finally {
+          if (isLatestRequest()) {
+            setIsCalculating(false);
+          }
         }
-      } catch (err) {
-        console.error("Calculation error:", err);
-        setCalculatedPrana('0');
-        setCalculatedWbtc('0');
-        setDidSyncReservesFromWbtc(false);
-        setDidSyncReservesFromPrana(false);
-        setReserveWarning('');
-      } finally {
+        return;
+      }
+
+      resetCalculatedState();
+      if (isLatestRequest()) {
         setIsCalculating(false);
       }
     };
-    
-    // Debounce the calculation
+
     const debounceTimeout = setTimeout(() => {
       calculateAmounts();
-    }, 500); // 500ms debounce
-    
+    }, 500);
+
     return () => clearTimeout(debounceTimeout);
-    
   }, [
-    wbtcAmount, pranaAmount, inputType, termIndex, isConnected, 
-    publicClient, isValidWbtcInput, isValidPranaInput, selectedTermEnum // Updated dependencies
+    wbtcAmount,
+    pranaAmount,
+    inputType,
+    termIndex,
+    isConnected,
+    publicClient,
+    isValidWbtcInput,
+    isValidPranaInput,
+    selectedTermEnum
   ]);
   
   // --- Cập nhật Loading State ---

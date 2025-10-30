@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { SELL_BOND_ADDRESS, SELL_BOND_ABI } from '../constants/sellBondContract';
@@ -21,6 +21,12 @@ const useSellBond = () => {
   const [reserveWarning, setReserveWarning] = useState('');
   const { writeContractAsync, status: writeStatus } = useWriteContract();
   const publicClient = usePublicClient();
+  // Mirroring the buy flow, the sell quote previously suffered from "stale"
+  // async responses where an older request would finish after the user changed
+  // the amount/term and overwrite the newer calculation. Tracking a request id
+  // lets us drop those outdated responses so the UI always reflects the latest
+  // inputs the user has provided.
+  const calculationRequestIdRef = useRef(0);
   
   const selectedTermEnum = termIndex; // Enum in contract (matching BOND_TERMS id)
   
@@ -73,23 +79,37 @@ const useSellBond = () => {
   
   // Calculation effect - runs when PRANA input or term changes
   useEffect(() => {
+    calculationRequestIdRef.current += 1;
+    const requestId = calculationRequestIdRef.current;
+
+    const isLatestRequest = () => calculationRequestIdRef.current === requestId;
+
+    const resetCalculatedState = () => {
+      if (!isLatestRequest()) return;
+      setCalculatedWbtc('0');
+      setDidSyncReserves(false);
+      setReserveWarning('');
+    };
+
     const calculateWbtc = async () => {
       if (!isConnected || !publicClient || !isValidPranaInput || !pranaAmount) {
-        setCalculatedWbtc('0');
-        setDidSyncReserves(false);
-        setReserveWarning('');
-        return; // Not ready or invalid input
+        resetCalculatedState();
+        if (isLatestRequest()) {
+          setIsCalculating(false);
+        }
+        return;
       }
-      
+
+      if (!isLatestRequest()) return;
       setIsCalculating(true);
-      setCalculatedWbtc('0'); // Reset
-      setReserveWarning('');
-      setDidSyncReserves(false);
-      
+      resetCalculatedState();
+
       try {
         const pranaAmountWei = parseUnits(pranaAmount, PRANA_DECIMALS);
-        
+        if (!isLatestRequest()) return;
+
         if (pranaAmountWei === 0n) {
+          if (!isLatestRequest()) return;
           setCalculatedWbtc('0');
           setDidSyncReserves(false);
         } else {
@@ -98,6 +118,9 @@ const useSellBond = () => {
             period: selectedTermEnum,
             publicClient,
           });
+
+          if (!isLatestRequest()) return;
+
           if (warning) {
             setReserveWarning(warning);
             setCalculatedWbtc('0');
@@ -111,22 +134,25 @@ const useSellBond = () => {
         }
       } catch (err) {
         console.error("WBTC Calculation error:", err);
-        setError("Lỗi tính toán số WBTC nhận được.");
-        setCalculatedWbtc('0');
-        setDidSyncReserves(false);
-        setReserveWarning('');
+        if (isLatestRequest()) {
+          setError("Lỗi tính toán số WBTC nhận được.");
+          setCalculatedWbtc('0');
+          setDidSyncReserves(false);
+          setReserveWarning('');
+        }
       } finally {
-        setIsCalculating(false);
+        if (isLatestRequest()) {
+          setIsCalculating(false);
+        }
       }
     };
-    
-    // Debounce the calculation
+
     const debounceTimeout = setTimeout(() => {
       calculateWbtc();
-    }, 500); // 500ms debounce
-    
+    }, 500);
+
     return () => clearTimeout(debounceTimeout);
-    
+
   }, [pranaAmount, isConnected, publicClient, isValidPranaInput, selectedTermEnum]);
   
   
