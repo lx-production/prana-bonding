@@ -31,6 +31,8 @@ const BuyBondForm = () => {
     didSyncReservesFromWbtc,
     didSyncReservesFromPrana,
     reserveWarning,
+    isPranaBelowMinimum,
+    isCalculatedPranaBelowMinimum,
   } = useBuyBond();
   
   if (!isConnected) return <p>Vui lòng kết nối ví của bạn.</p>;
@@ -157,7 +159,12 @@ const BuyBondForm = () => {
     <button
     className="btn-secondary"
     onClick={handleApprove}
-    disabled={isOperationInProgress || !needsApproval}
+    disabled={
+      isOperationInProgress ||
+      !needsApproval ||
+      (inputType === 'PRANA' && isPranaBelowMinimum) ||
+      (inputType === 'WBTC' && isCalculatedPranaBelowMinimum)
+    }
     >
     {/* More specific loading states for Approve button */}
     {isWaitingForApprovalConfirmation ? (
@@ -175,6 +182,7 @@ const BuyBondForm = () => {
     disabled={
       needsApproval ||
       isOperationInProgress ||
+      (inputType === 'PRANA' && isPranaBelowMinimum) ||
       !( // Disable if the relevant input is NOT valid
         (inputType === 'WBTC' && isValidWbtcInput) ||
         (inputType === 'PRANA' && isValidPranaInput)

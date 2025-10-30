@@ -13,7 +13,6 @@ const SellBondForm = () => {
         bondRates,
         error,
         success,
-        // isLoading now covers both sending and waiting for confirmation
         loading: isLoading,
         isCalculating,
         handleApprove,
@@ -26,6 +25,7 @@ const SellBondForm = () => {
         isValidPranaInput,
         didSyncReserves,
         reserveWarning,
+        isPranaBelowMinimum,
     } = useSellBond();
 
     if (!isConnected) return <p>Vui lòng kết nối ví của bạn.</p>;
@@ -108,7 +108,12 @@ const SellBondForm = () => {
                 <button
                     className="btn-secondary"
                     onClick={handleApprove}
-                    disabled={isOperationInProgress || !needsApproval || !isValidPranaInput}
+                    disabled={
+                        isOperationInProgress ||
+                        !needsApproval ||
+                        !isValidPranaInput ||
+                        isPranaBelowMinimum
+                    }
                 >
                     {/* More specific loading states for Approve button */}
                     {isWaitingForApprovalConfirmation ? (
@@ -126,7 +131,8 @@ const SellBondForm = () => {
                     disabled={
                         needsApproval ||
                         isOperationInProgress ||
-                        !isValidPranaInput
+                        !isValidPranaInput ||
+                        isPranaBelowMinimum
                     }
                 >
                     {isOperationInProgress ? (

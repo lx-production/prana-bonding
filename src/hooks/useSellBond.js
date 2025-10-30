@@ -76,6 +76,18 @@ const useSellBond = () => {
   // --- Calculations ---
   
   const isValidPranaInput = useMemo(() => pranaAmount && !isNaN(parseFloat(pranaAmount)) && parseFloat(pranaAmount) > 0, [pranaAmount]);
+
+  const isPranaBelowMinimum = useMemo(() => {
+    if (!isValidPranaInput) return false;
+    try {
+      if (minPranaSellAmountWei === 0n) return false;
+      const currentPranaWei = parseUnits(pranaAmount, PRANA_DECIMALS);
+      return currentPranaWei < minPranaSellAmountWei;
+    } catch (err) {
+      console.error('Failed to compare PRANA sell amount with minimum:', err);
+      return true;
+    }
+  }, [isValidPranaInput, minPranaSellAmountWei, pranaAmount]);
   
   // Calculation effect - runs when PRANA input or term changes
   useEffect(() => {
@@ -291,10 +303,10 @@ const useSellBond = () => {
   // --- Derived State ---
   
   const needsApproval = useMemo(() => {
-    if (!isConnected || !isValidPranaInput) return false;
+    if (!isConnected || !isValidPranaInput || isPranaBelowMinimum) return false;
     const requiredPranaWei = parseUnits(pranaAmount, PRANA_DECIMALS);
     return requiredPranaWei > 0n && requiredPranaWei > pranaAllowance;
-  }, [pranaAmount, pranaAllowance, isConnected, isValidPranaInput]);
+  }, [pranaAmount, pranaAllowance, isConnected, isValidPranaInput, isPranaBelowMinimum]);
   
   // Fetch Bond Rates (V2: bondRates(termId))
   useEffect(() => {
@@ -351,6 +363,7 @@ const useSellBond = () => {
     isValidPranaInput,
     didSyncReserves,
     reserveWarning,
+    isPranaBelowMinimum,
   };
 };
 

@@ -83,6 +83,32 @@ const useBuyBond = () => {
   
   const isValidWbtcInput = useMemo(() => wbtcAmount && !isNaN(parseFloat(wbtcAmount)) && parseFloat(wbtcAmount) > 0, [wbtcAmount]);
   const isValidPranaInput = useMemo(() => pranaAmount && !isNaN(parseFloat(pranaAmount)) && parseFloat(pranaAmount) > 0, [pranaAmount]);
+
+  const isPranaBelowMinimum = useMemo(() => {
+    if (inputType !== 'PRANA') return false;
+    if (!isValidPranaInput) return false;
+    try {
+      if (minPranaBuyAmountWei === 0n) return false;
+      const currentPranaWei = parseUnits(pranaAmount, PRANA_DECIMALS);
+      return currentPranaWei < minPranaBuyAmountWei;
+    } catch (err) {
+      console.error('Failed to compare PRANA amount with minimum:', err);
+      return true;
+    }
+  }, [inputType, isValidPranaInput, minPranaBuyAmountWei, pranaAmount]);
+
+  const isCalculatedPranaBelowMinimum = useMemo(() => {
+    if (inputType !== 'WBTC') return false;
+    if (!isValidWbtcInput) return false;
+    try {
+      if (minPranaBuyAmountWei === 0n) return false;
+      const calculatedPranaWei = parseUnits(calculatedPrana || '0', PRANA_DECIMALS);
+      return calculatedPranaWei < minPranaBuyAmountWei;
+    } catch (err) {
+      console.error('Failed to compare calculated PRANA with minimum:', err);
+      return true;
+    }
+  }, [inputType, isValidWbtcInput, minPranaBuyAmountWei, calculatedPrana]);
   
   // Calculation effect - runs when inputs change
   useEffect(() => {
@@ -412,6 +438,12 @@ const useBuyBond = () => {
   // const isLoading = writeStatus === 'pending'; // Sử dụng state `loading` thay thế
   
   const needsApproval = useMemo(() => {
+    if (inputType === 'WBTC' && isCalculatedPranaBelowMinimum) {
+      return false;
+    }
+    if (inputType === 'PRANA' && isPranaBelowMinimum) {
+      return false;
+    }
     let requiredWbtcWei = 0n;
     if (inputType === 'WBTC' && isValidWbtcInput) {
       requiredWbtcWei = parseUnits(wbtcAmount, WBTC_DECIMALS);
@@ -421,7 +453,7 @@ const useBuyBond = () => {
     }
     // Ensure allowance is also a BigInt for comparison
     return isConnected && requiredWbtcWei > 0n && requiredWbtcWei > wbtcAllowance;
-  }, [inputType, wbtcAmount, calculatedWbtc, wbtcAllowance, isConnected, isValidWbtcInput, isValidPranaInput]);
+  }, [inputType, wbtcAmount, calculatedWbtc, wbtcAllowance, isConnected, isValidWbtcInput, isValidPranaInput, isPranaBelowMinimum, isCalculatedPranaBelowMinimum]);
   
   // Đọc tất cả Bond Rates cho V2 bằng cách gọi bondRates(enum)
   useEffect(() => {
@@ -486,6 +518,8 @@ const useBuyBond = () => {
     didSyncReservesFromWbtc,
     didSyncReservesFromPrana,
     reserveWarning,
+    isPranaBelowMinimum,
+    isCalculatedPranaBelowMinimum,
   };
 };
 
