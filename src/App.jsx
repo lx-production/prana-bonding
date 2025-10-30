@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import ConnectWallet from './components/ConnectWallet';
 import ThemeSwitcher from './components/ThemeSwitcher';
@@ -9,30 +10,12 @@ import SellBondBalance from './components/SellBondBalance';
 
 function App() {
   const { isConnected } = useAccount();
-
-  const handleTabChange = (tabName) => {
-    // Remove active class from all tabs and contents
-    document.querySelectorAll('.bond-tab').forEach(tab => {
-      tab.classList.remove('active');
-    });
-    document.querySelectorAll('.bond-tab-content').forEach(content => {
-      content.classList.remove('active');
-    });
-    
-    // Add active class to selected tab and content
-    if (tabName === 'buy') {
-      document.getElementById('buy-bond-tab').classList.add('active');
-      document.getElementById('buy-bond-content').classList.add('active');
-    } else if (tabName === 'sell') {
-      document.getElementById('sell-bond-tab').classList.add('active');
-      document.getElementById('sell-bond-content').classList.add('active');
-    }
-  };
+  const [activeTab, setActiveTab] = useState('buy');
 
   return (
     <div className="container">
       <header className="header">
-        <h1 style={{ fontWeight: '800' }}>PRANA Bonding V2</h1>        
+        <h1 style={{ fontWeight: '700' }}>PRANA Bonding V2</h1>        
         <ConnectWallet />
       </header>
       
@@ -56,19 +39,33 @@ function App() {
           <div>                       
             <div className="card bond-card-container">
               <div className="bond-tabs">
-                <div className="bond-tab active" id="buy-bond-tab" onClick={() => handleTabChange('buy')}>
+                <div
+                  className={`bond-tab${activeTab === 'buy' ? ' active' : ''}`}
+                  id="buy-bond-tab"
+                  onClick={() => setActiveTab('buy')}
+                >
                   Mua PRANA với Discount
                 </div>
-                <div className="bond-tab" id="sell-bond-tab" onClick={() => handleTabChange('sell')}>
+                <div
+                  className={`bond-tab${activeTab === 'sell' ? ' active' : ''}`}
+                  id="sell-bond-tab"
+                  onClick={() => setActiveTab('sell')}
+                >
                   Bán PRANA với Premium
                 </div>
               </div>
               
-              <div className="bond-tab-content active" id="buy-bond-content">
+              <div
+                className={`bond-tab-content${activeTab === 'buy' ? ' active' : ''}`}
+                id="buy-bond-content"
+              >
                 <BuyBondForm />
               </div>
               
-              <div className="bond-tab-content" id="sell-bond-content">
+              <div
+                className={`bond-tab-content${activeTab === 'sell' ? ' active' : ''}`}
+                id="sell-bond-content"
+              >
                 <SellBondForm />
               </div>
             </div>
