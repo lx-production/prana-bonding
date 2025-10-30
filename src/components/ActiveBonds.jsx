@@ -144,15 +144,14 @@ const ActiveBonds = () => {
   const isLoading = isFetchingBuyBonds || isFetchingSellBonds || isFetchingBuyBondsV1 || isFetchingSellBondsV1;
   const fetchError = fetchBuyError || fetchSellError || fetchBuyErrorV1 || fetchSellErrorV1;
 
-  const actionLoadingBondId = buyActionLoading.bondId ?? sellActionLoading.bondId ?? buyActionLoadingV1.bondId ?? sellActionLoadingV1.bondId;
-  const actionLoadingType = buyActionLoading.bondId // checking if buyActionLoading.bondId has a value
-    ? 'buy-v2' // if it has a value, return 'buy-v2'
-    : sellActionLoading.bondId
-      ? 'sell-v2'
-      : buyActionLoadingV1.bondId
-        ? 'buy-v1'
-        : sellActionLoadingV1.bondId
-          ? 'sell-v1'
+  const actionLoadingKey = buyActionLoading.bondId != null
+    ? `buy-v2-${buyActionLoading.bondId}`
+    : sellActionLoading.bondId != null
+      ? `sell-v2-${sellActionLoading.bondId}`
+      : buyActionLoadingV1.bondId != null
+        ? `buy-v1-${buyActionLoadingV1.bondId}`
+        : sellActionLoadingV1.bondId != null
+          ? `sell-v1-${sellActionLoadingV1.bondId}`
           : null;
 
   // Display loading indicator while fetching
@@ -190,11 +189,11 @@ const ActiveBonds = () => {
       ) : (
         combinedBonds.map((bond) => {
           const isBuyBond = bond.bondType === 'buy';
-          const expectedActionKey = `${bond.bondType}-${bond.version}`;
-          const isCurrentActionLoading = actionLoadingBondId === bond.id && actionLoadingType === expectedActionKey;
+          const bondKey = `${bond.bondType}-${bond.version}-${bond.id}`;
+          const isCurrentActionLoading = actionLoadingKey === bondKey;
 
           return (
-            <div key={`${bond.bondType}-${bond.id}`} className="bond-card"> {/* Ensure unique key */}
+            <div key={bondKey} className="bond-card"> {/* Ensure unique key */}
               <div className="bond-header">
                 <h3>Bond #{bond.id}</h3>
                 <div className="bond-badges"> {/* Container for badges */}

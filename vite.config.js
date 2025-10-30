@@ -15,4 +15,8 @@ export default defineConfig({
     })
   ],
   base: '/bond/',
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setupTests.js'
+  },
 })

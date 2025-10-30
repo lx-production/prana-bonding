@@ -286,7 +286,7 @@ const useSellBond = () => {
               args: [option.id]
             });
             
-            return [option.seconds, { rate: BigInt(rate), duration: BigInt(duration) }];
+            return [option.seconds, { rate: Number(rate), duration: Number(duration) }];
           })
         );
         
