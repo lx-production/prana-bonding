@@ -7,12 +7,10 @@ import { PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/sharedContracts';
 /**
  * Custom hook for bond-related actions based on BuyPranaBond contract
  * @param {Array} bondsData - Raw bonds data from the contract (e.g., from getUserActiveBonds)
- * @param {function} refetchBuyBonds - Function to refetch bonds after an action
  * @returns {object} - Contains action functions and processed bond states
  */
 const useActiveBuyBonds = (
   bondsData,
-  refetchBuyBonds,
   {
     contractAddress = BUY_BOND_ADDRESS,
     contractAbi = BUY_BOND_ABI,
@@ -23,6 +21,7 @@ const useActiveBuyBonds = (
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [currentTime, setCurrentTime] = useState(Math.floor(Date.now() / 1000));
+  const [localBondsData, setLocalBondsData] = useState(() => bondsData || []);
 
   // Helper function to format timestamps to Vietnam time with 24h format
   const formatVietnamTime = (timestamp) => {
@@ -45,6 +44,10 @@ const useActiveBuyBonds = (
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    setLocalBondsData(bondsData || []);
+  }, [bondsData]);
 
   // Helper function to calculate claimable PRANA based on contract logic
   const calculateClaimablePrana = (bond, now) => {
@@ -87,11 +90,10 @@ const useActiveBuyBonds = (
       return potentiallyClaimable < remainingPrana ? potentiallyClaimable : remainingPrana;
   };
 
-
   // Process bonds data
   const processedBuyBonds = useMemo(() => {
-    if (!bondsData) return [];
-    return bondsData.map((bond) => {
+    if (!localBondsData) return [];
+    return localBondsData.map((bond) => {
       const now = currentTime;
       const creationTimeNum = Number(bond.creationTime);
       const maturityTimeNum = Number(bond.maturityTime);
@@ -119,7 +121,7 @@ const useActiveBuyBonds = (
         status: bond.claimed ? 'Claimed' : (isMature ? 'Mature' : 'Vesting'),
       };
     }).sort((a, b) => a.id - b.id); // Sort by ID for consistent display
-  }, [bondsData, currentTime]); // Recalculate when bonds data or time changes
+  }, [localBondsData, currentTime]); // Recalculate when bonds data or time changes
 
   // Reset messages after 10 seconds
   useEffect(() => {
@@ -151,9 +153,34 @@ const useActiveBuyBonds = (
       });
 
       setSuccess(`Successfully sent claim transaction for bond #${bondId} (${claimableAmount} PRANA). Tx: ${txHash}. Giao dịch claim bond #${bondId} (${claimableAmount} PRANA) đã gửi thành công.`);
-      // Optimistically update or wait for refetch? Let's refetch for consistency.
-      if (refetchBuyBonds) {
-        setTimeout(refetchBuyBonds, 1000); // Give RPC a moment before refetching
+      if (bond) {
+        const claimableRaw = bond.claimablePranaRaw || BigInt(0);
+        const remainingRaw = BigInt(bond.pranaAmount) - BigInt(bond.claimedPrana);
+        const isFullClaim = claimableRaw >= remainingRaw;
+
+        setLocalBondsData((prevBonds) => {
+          if (!prevBonds) return prevBonds;
+          return prevBonds.reduce((acc, currentBond) => {
+            if (Number(currentBond.id) !== bondId) {
+              acc.push(currentBond);
+              return acc;
+            }
+
+            if (isFullClaim) {
+              return acc;
+            }
+
+            const updatedClaimedPrana = BigInt(currentBond.claimedPrana) + claimableRaw;
+            const updatedBond = {
+              ...currentBond,
+              claimedPrana: updatedClaimedPrana,
+              lastClaimTime: BigInt(currentTime),
+            };
+
+            acc.push(updatedBond);
+            return acc;
+          }, []);
+        });
       }
     } catch (err) {
       console.error('Claim bond error:', err);

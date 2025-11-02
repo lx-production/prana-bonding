@@ -7,12 +7,10 @@ import { PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/sharedContracts';
 /**
  * Custom hook for bond-related actions based on SellPranaBond contract
  * @param {Array} bondsData - Raw bonds data from the contract (e.g., from getUserActiveBonds)
- * @param {function} refetchBonds - Function to refetch bonds after an action
  * @returns {object} - Contains action functions and processed bond states
  */
 const useActiveSellBonds = (
   bondsData,
-  refetchBonds,
   {
     contractAddress = SELL_BOND_ADDRESS,
     contractAbi = SELL_BOND_ABI,
@@ -23,6 +21,7 @@ const useActiveSellBonds = (
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [currentTime, setCurrentTime] = useState(Math.floor(Date.now() / 1000));
+  const [localBondsData, setLocalBondsData] = useState(() => bondsData || []);
 
   // Helper function to format timestamps to Vietnam time with 24h format
   const formatVietnamTime = (timestamp) => {
@@ -45,6 +44,10 @@ const useActiveSellBonds = (
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    setLocalBondsData(bondsData || []);
+  }, [bondsData]);
 
   // Helper function to calculate claimable WBTC based on contract logic
   const calculateClaimableWbtc = (bond, now) => { // Renamed function and updated logic for WBTC
@@ -90,8 +93,8 @@ const useActiveSellBonds = (
 
   // Process bonds data
   const processedSellBonds = useMemo(() => {
-    if (!bondsData) return [];
-    return bondsData.map((bond) => {
+    if (!localBondsData) return [];
+    return localBondsData.map((bond) => {
       const now = currentTime;
       const creationTimeNum = Number(bond.creationTime);
       const maturityTimeNum = Number(bond.maturityTime);
@@ -119,7 +122,7 @@ const useActiveSellBonds = (
         status: bond.claimed ? 'Claimed' : (isMature ? 'Mature' : 'Vesting'),
       };
     }).sort((a, b) => a.id - b.id); // Sort by ID for consistent display
-  }, [bondsData, currentTime]); // Recalculate when bonds data or time changes
+  }, [localBondsData, currentTime]); // Recalculate when bonds data or time changes
 
   // Reset messages after 10 seconds
   useEffect(() => {
@@ -150,10 +153,35 @@ const useActiveSellBonds = (
         args: [BigInt(bondId)] // Ensure bondId is passed as BigInt if required by ABI
       });
 
-      setSuccess(`Successfully sent claim transaction for bond #${bondId} (${claimableAmount} WBTC). Tx: ${txHash}. Giao dịch claim bond #${bondId} (${claimableAmount} WBTC) đã gửi thành công.`); // Updated message for WBTC
-      // Optimistically update or wait for refetch? Let's refetch for consistency.
-      if (refetchBonds) {
-        setTimeout(refetchBonds, 1000); // Give RPC a moment before refetching
+      setSuccess(`Successfully sent claim transaction for bond #${bondId} (${claimableAmount} WBTC). Tx: ${txHash}. Giao dịch claim bond #${bondId} (${claimableAmount} WBTC) đã gửi thành công.`);
+      if (bond) {
+        const claimableRaw = bond.claimableWbtcRaw || BigInt(0);
+        const remainingRaw = BigInt(bond.wbtcAmount) - BigInt(bond.claimedWbtc);
+        const isFullClaim = claimableRaw >= remainingRaw;
+
+        setLocalBondsData((prevBonds) => {
+          if (!prevBonds) return prevBonds;
+          return prevBonds.reduce((acc, currentBond) => {
+            if (Number(currentBond.id) !== bondId) {
+              acc.push(currentBond);
+              return acc;
+            }
+
+            if (isFullClaim) {
+              return acc;
+            }
+
+            const updatedClaimedWbtc = BigInt(currentBond.claimedWbtc) + claimableRaw;
+            const updatedBond = {
+              ...currentBond,
+              claimedWbtc: updatedClaimedWbtc,
+              lastClaimTime: BigInt(currentTime),
+            };
+
+            acc.push(updatedBond);
+            return acc;
+          }, []);
+        });
       }
     } catch (err) {
       console.error('Claim bond error:', err);

@@ -89,7 +89,7 @@ const ActiveBonds = () => {
     actionLoading: buyActionLoading,
     error: buyActionError,
     success: buyActionSuccess,
-  } = useActiveBuyBonds(activeBuyBondsData, refetchBuyBonds, {
+  } = useActiveBuyBonds(activeBuyBondsData, {
     contractAddress: BUY_BOND_ADDRESS_V2,
     contractAbi: BUY_BOND_ABI_V2,
   });
@@ -101,7 +101,7 @@ const ActiveBonds = () => {
     actionLoading: buyActionLoadingV1,
     error: buyActionErrorV1,
     success: buyActionSuccessV1,
-  } = useActiveBuyBonds(activeBuyBondsDataV1, refetchBuyBondsV1, {
+  } = useActiveBuyBonds(activeBuyBondsDataV1, {
     contractAddress: BUY_BOND_ADDRESS_V1,
     contractAbi: BUY_BOND_ABI_V1,
   });
@@ -113,7 +113,7 @@ const ActiveBonds = () => {
     actionLoading: sellActionLoading,
     error: sellActionError,
     success: sellActionSuccess,
-  } = useActiveSellBonds(activeSellBondsData, refetchSellBonds, {
+  } = useActiveSellBonds(activeSellBondsData, {
     contractAddress: SELL_BOND_ADDRESS_V2,
     contractAbi: SELL_BOND_ABI_V2,
   });
@@ -125,7 +125,7 @@ const ActiveBonds = () => {
     actionLoading: sellActionLoadingV1,
     error: sellActionErrorV1,
     success: sellActionSuccessV1,
-  } = useActiveSellBonds(activeSellBondsDataV1, refetchSellBondsV1, {
+  } = useActiveSellBonds(activeSellBondsDataV1, {
     contractAddress: SELL_BOND_ADDRESS_V1,
     contractAbi: SELL_BOND_ABI_V1,
   });
