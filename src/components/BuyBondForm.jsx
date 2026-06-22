@@ -1,6 +1,6 @@
 import useBuyBond from '../hooks/useBuyBond';
-import { BOND_TERMS } from '../constants/bondTerms';
 import DurationSlider from './DurationSlider';
+import { BOND_TERMS } from '../constants/bondTerms';
 
 const BuyBondForm = () => {
   const {
@@ -61,6 +61,12 @@ const BuyBondForm = () => {
       console.log('Invalid input value:', value);
     }
   };    
+
+  const handleMaxWbtc = () => {
+    setWbtcAmount(wbtcBalance);
+    setInputType('WBTC');
+    setPranaAmount('');
+  };
   
   // Use our helper function for display
   const displayPurchasablePrana = isCalculating && inputType === 'WBTC' 
@@ -77,9 +83,52 @@ const BuyBondForm = () => {
     <div className="bonding-form" key="bonding-form">
     <h3>Mua PRANA OTC</h3>
     <p style={{marginTop: '10px', marginBottom: '15px', lineHeight: '20px', fontSize: '15px' }}>Bạn sẽ nhận được PRANA với giá chiết khấu so với thị trường. Số PRANA này sẽ được trả dần trong suốt kỳ hạn bond (vesting). Thời gian vesting càng lâu, chiết khấu càng lớn.</p>
-    <p style={{marginTop: '0', marginBottom: '15px', lineHeight: '20px', fontSize: '15px' }}>Nếu bạn có sẵn WBTC, hãy nhập số WBTC muốn bán. Cách đó là chiều quote thuận và thường có lợi hơn. Đừng dùng chiều nhập PRANA để kiểm tra ngược lại, vì nó không phải phép quy đổi ngược 1:1.</p>
+    <p style={{marginTop: '0', marginBottom: '15px', lineHeight: '20px', fontSize: '15px' }}>Nếu bạn có sẵn WBTC, hãy nhập số WBTC muốn bán. Cách đó là chiều quote thuận và thường có lợi hơn. Đừng dùng chiều nhập PRANA để kiểm tra ngược lại, vì nó không phải công thức quy đổi ngược 1:1.</p>
     
     <div className="form-group bond-amount-group">
+    {/* Input WBTC */}
+    <div className="bond-input-section">
+    <div className="bond-input-header">
+    <label htmlFor="wbtc-amount">Số lượng WBTC muốn bán</label>
+    <span className="wbtc-balance">Số dư: {Number(wbtcBalance).toFixed(8)} WBTC</span>
+    </div>
+    <div className="token-input-wrapper">
+    <input
+    id="wbtc-amount"
+    type="text"
+    value={wbtcAmount}
+    onChange={(e) => handleInputChange(e, 'WBTC')}
+    placeholder="0.00000000"
+    disabled={isInputDisabled}
+    className="form-input token-input"
+    />
+    <button
+    type="button"
+    className="max-button"
+    onClick={handleMaxWbtc}
+    disabled={isInputDisabled || Number(wbtcBalance) <= 0}
+    aria-label="Nhập toàn bộ số dư WBTC"
+    >
+    max
+    </button>
+    </div>
+    {/* Show calculated PRANA only when WBTC is the input type and amount is valid */}
+    {inputType === 'WBTC' && wbtcAmount && parseFloat(wbtcAmount) > 0 && (
+      <div className="calculated-amount">
+      {reserveWarning ? (
+        <div style={{ color: 'red', fontSize: '14px' }}>{reserveWarning}</div>
+      ) : (
+        <>
+        Nhận được: <strong>{displayPurchasablePrana}</strong>
+        {didSyncReservesFromWbtc && (
+          <span className="sync-tag">(Đã đồng bộ dự trữ thị trường)</span>
+        )}
+        </>
+      )}
+      </div>
+    )}
+    </div>
+    
     {/* Input PRANA */}
     <div className="bond-input-section">
     <label htmlFor="prana-amount">Số lượng PRANA muốn mua</label>
@@ -101,35 +150,6 @@ const BuyBondForm = () => {
         <>
         Cần trả: <strong>{displayRequiredWbtc}</strong>
         {didSyncReservesFromPrana && (
-          <span className="sync-tag">(Đã đồng bộ dự trữ thị trường)</span>
-        )}
-        </>
-      )}
-      </div>
-    )}
-    </div>
-    
-    {/* Input WBTC */}
-    <div className="bond-input-section">
-    <label htmlFor="wbtc-amount">Số lượng WBTC muốn bán</label>
-    <input
-    id="wbtc-amount"
-    type="text"
-    value={wbtcAmount}
-    onChange={(e) => handleInputChange(e, 'WBTC')}
-    placeholder={`${parseFloat(wbtcBalance).toFixed(8)} WBTC`}
-    disabled={isInputDisabled}
-    className="form-input"
-    />
-    {/* Show calculated PRANA only when WBTC is the input type and amount is valid */}
-    {inputType === 'WBTC' && wbtcAmount && parseFloat(wbtcAmount) > 0 && (
-      <div className="calculated-amount">
-      {reserveWarning ? (
-        <div style={{ color: 'red', fontSize: '14px' }}>{reserveWarning}</div>
-      ) : (
-        <>
-        Nhận được: <strong>{displayPurchasablePrana}</strong>
-        {didSyncReservesFromWbtc && (
           <span className="sync-tag">(Đã đồng bộ dự trữ thị trường)</span>
         )}
         </>

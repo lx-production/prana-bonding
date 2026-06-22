@@ -696,6 +696,49 @@ button {
   margin-bottom: 1rem;
 }
 
+.bond-input-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.wbtc-balance {
+  color: var(--text-light);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.token-input-wrapper {
+  position: relative;
+}
+
+.token-input {
+  padding-right: 4.25rem;
+}
+
+.max-button {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.max-button:hover:not(:disabled) {
+  background-color: var(--background-color);
+}
+
+.max-button:disabled {
+  color: var(--text-light);
+  cursor: not-allowed;
+}
+
 .calculated-amount {
   color: var(--text-secondary);
   margin-top: 0.7rem;
@@ -1084,4 +1127,3 @@ button {
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
-
