@@ -37,5 +37,8 @@
     "@testing-library/jest-dom": "^6.6.3",
     "vitest": "^3.0.5",
     "jsdom": "^25.0.1"
+  },
+  "overrides": {
+    "ws": "8.21.0"
   }
 }
