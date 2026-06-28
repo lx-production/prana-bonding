@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useConnection } from 'wagmi';
 import ConnectWallet from './components/ConnectWallet';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import BuyBondForm from './components/BuyBondForm';
@@ -9,7 +9,7 @@ import BuyBondBalance from './components/BuyBondBalance';
 import SellBondBalance from './components/SellBondBalance';
 
 function App() {
-  const { isConnected } = useAccount();
+  const { isConnected } = useConnection();
   const [activeTab, setActiveTab] = useState('buy');
 
   return (

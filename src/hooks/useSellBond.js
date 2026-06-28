@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
+import { useConnection, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { SELL_BOND_ADDRESS, SELL_BOND_ABI } from '../constants/sellBondContract';
 import { PRANA_ADDRESS, PRANA_ABI, PRANA_DECIMALS, WBTC_DECIMALS } from '../constants/sharedContracts';
@@ -7,7 +7,7 @@ import { BOND_TERMS } from '../constants/bondTerms';
 import { calculateWbtcQuote } from '../utils/SellBondPricing';
 
 const useSellBond = () => {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const [pranaAmount, setPranaAmount] = useState('');
   const [termIndex, setTermIndex] = useState(1); // Default term index
   const [bondRates, setBondRates] = useState({}); // Stores { termInSeconds: { rate, duration } }
@@ -19,7 +19,7 @@ const useSellBond = () => {
   const [isWaitingForApprovalConfirmation, setIsWaitingForApprovalConfirmation] = useState(false);
   const [didSyncReserves, setDidSyncReserves] = useState(false);
   const [reserveWarning, setReserveWarning] = useState('');
-  const { writeContractAsync, status: writeStatus } = useWriteContract();
+  const { mutateAsync: writeContractAsync, status: writeStatus } = useWriteContract();
   const publicClient = usePublicClient();
   // Mirroring the buy flow, the sell quote previously suffered from "stale"
   // async responses where an older request would finish after the user changed
@@ -38,8 +38,9 @@ const useSellBond = () => {
     abi: PRANA_ABI,
     functionName: 'balanceOf',
     args: [address],
-    enabled: isConnected && !!address,
-    watch: true,
+    query: {
+      enabled: isConnected && !!address,
+    },
   });
   const pranaBalance = pranaBalanceData ? formatUnits(pranaBalanceData, PRANA_DECIMALS) : '0';
   
@@ -49,8 +50,9 @@ const useSellBond = () => {
     abi: PRANA_ABI,
     functionName: 'allowance',
     args: [address, SELL_BOND_ADDRESS],
-    enabled: isConnected && !!address,
-    watch: true,
+    query: {
+      enabled: isConnected && !!address,
+    },
   });
   const pranaAllowance = pranaAllowanceData ? BigInt(pranaAllowanceData) : BigInt(0);
   
@@ -59,7 +61,9 @@ const useSellBond = () => {
     address: SELL_BOND_ADDRESS,
     abi: SELL_BOND_ABI,
     functionName: 'minPranaSellAmount', // Adjusted function name
-    enabled: isConnected,
+    query: {
+      enabled: isConnected,
+    },
   });
   const minPranaSellAmountFormatted = minSellAmountData ? formatUnits(minSellAmountData, PRANA_DECIMALS) : '0';
   const minPranaSellAmountWei = minSellAmountData ? BigInt(minSellAmountData) : BigInt(0);
@@ -70,7 +74,9 @@ const useSellBond = () => {
     abi: SELL_BOND_ABI,
     functionName: 'getUserActiveBonds',
     args: address ? [address] : undefined,
-    enabled: false,
+    query: {
+      enabled: false,
+    },
   });
   
   // --- Calculations ---

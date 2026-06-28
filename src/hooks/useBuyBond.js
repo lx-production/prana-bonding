@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
+import { useConnection, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { BUY_BOND_ADDRESS, BUY_BOND_ABI } from '../constants/buyBondContract';
 import { WBTC_ADDRESS, WBTC_ABI, WBTC_DECIMALS, PRANA_DECIMALS } from '../constants/sharedContracts';
@@ -7,7 +7,7 @@ import { BOND_TERMS } from '../constants/bondTerms';
 import { calculateWbtcQuote, calculatePranaQuote } from '../utils/BuyBondPricing';
 
 const useBuyBond = () => {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const [inputType, setInputType] = useState('PRANA');
   const [wbtcAmount, setWbtcAmount] = useState('');
   const [pranaAmount, setPranaAmount] = useState('');
@@ -23,7 +23,7 @@ const useBuyBond = () => {
   const [didSyncReservesFromWbtc, setDidSyncReservesFromWbtc] = useState(false);
   const [didSyncReservesFromPrana, setDidSyncReservesFromPrana] = useState(false);
   const [reserveWarning, setReserveWarning] = useState('');
-  const { writeContractAsync, status: writeStatus } = useWriteContract();
+  const { mutateAsync: writeContractAsync, status: writeStatus } = useWriteContract();
   const publicClient = usePublicClient();
   // We track the latest quote calculation so that only the freshest async
   // response mutates state. Before adding this guard a slow RPC response could
@@ -44,8 +44,9 @@ const useBuyBond = () => {
     abi: WBTC_ABI,
     functionName: 'balanceOf',
     args: [address],
-    enabled: isConnected && !!address,
-    watch: true,
+    query: {
+      enabled: isConnected && !!address,
+    },
   });
   const wbtcBalance = wbtcBalanceData ? formatUnits(wbtcBalanceData, WBTC_DECIMALS) : '0';
   
@@ -55,8 +56,9 @@ const useBuyBond = () => {
     abi: WBTC_ABI,
     functionName: 'allowance',
     args: [address, BUY_BOND_ADDRESS],
-    enabled: isConnected && !!address,
-    watch: true, // Theo dõi thay đổi allowance
+    query: {
+      enabled: isConnected && !!address,
+    },
   });
   const wbtcAllowance = wbtcAllowanceData ? BigInt(wbtcAllowanceData) : BigInt(0);
   
@@ -65,7 +67,9 @@ const useBuyBond = () => {
     address: BUY_BOND_ADDRESS,
     abi: BUY_BOND_ABI,
     functionName: 'minPranaBuyAmount',
-    enabled: isConnected,
+    query: {
+      enabled: isConnected,
+    },
   });
   const minPranaBuyAmountFormatted = minBuyAmountData ? formatUnits(minBuyAmountData, PRANA_DECIMALS) : '0';
   const minPranaBuyAmountWei = minBuyAmountData ? BigInt(minBuyAmountData) : BigInt(0);    
@@ -76,7 +80,9 @@ const useBuyBond = () => {
     abi: BUY_BOND_ABI,
     functionName: 'getUserActiveBonds',
     args: address ? [address] : undefined,
-    enabled: false,
+    query: {
+      enabled: false,
+    },
   });
   
   // --- Calculations (Client-side) ---

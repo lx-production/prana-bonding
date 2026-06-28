@@ -1,9 +1,10 @@
-import { useConnect, useAccount, useDisconnect } from 'wagmi';
+import { useConnect, useConnectors, useConnection, useDisconnect } from 'wagmi';
 
 const ConnectWallet = () => {
-  const { connect, connectors, isLoading } = useConnect();
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
+  const { mutate: connect, isPending: isConnecting } = useConnect();
+  const connectors = useConnectors();
+  const { address, isConnected } = useConnection();
+  const { mutate: disconnect, isPending: isDisconnecting } = useDisconnect();
 
   // Prefer an injected wallet if usable, otherwise fall back to the first available connector.
   const readyConnectors =
@@ -19,6 +20,7 @@ const ConnectWallet = () => {
         <button 
           className="btn-disconnect"
           onClick={() => disconnect()}
+          disabled={isDisconnecting}
         >
           Disconnect
         </button>
@@ -31,9 +33,9 @@ const ConnectWallet = () => {
       <button
         className="btn-primary"
         onClick={() => preferredConnector && connect({ connector: preferredConnector })}
-        disabled={isLoading || !canConnect}
+        disabled={isConnecting || !canConnect}
       >
-        {isLoading ? (
+        {isConnecting ? (
           <>
             <span className="loading"></span>
             Connecting...

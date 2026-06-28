@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useAccount, useReadContract } from 'wagmi';
+import { useConnection, useReadContract } from 'wagmi';
 import { BUY_BOND_ADDRESS_V1, BUY_BOND_ABI_V1, BUY_BOND_ADDRESS_V2, BUY_BOND_ABI_V2 } from '../constants/buyBondContract';
 import { SELL_BOND_ADDRESS_V1, SELL_BOND_ABI_V1, SELL_BOND_ADDRESS_V2, SELL_BOND_ABI_V2 } from '../constants/sellBondContract';
 import PropTypes from 'prop-types';
@@ -24,20 +24,21 @@ SuccessDisplay.propTypes = {
 };
 
 const ActiveBonds = () => {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
 
   // Fetch user's active buy bonds (V2)
   const {
     data: activeBuyBondsData,
     error: fetchBuyError,
     isLoading: isFetchingBuyBonds,
-    refetch: refetchBuyBonds
   } = useReadContract({
     address: BUY_BOND_ADDRESS_V2,
     abi: BUY_BOND_ABI_V2,
     functionName: 'getUserActiveBonds',
     args: [address],
-    enabled: isConnected && !!address,
+    query: {
+      enabled: isConnected && !!address,
+    },
   });
 
   // Fetch user's active buy bonds (V1)
@@ -45,13 +46,14 @@ const ActiveBonds = () => {
     data: activeBuyBondsDataV1,
     error: fetchBuyErrorV1,
     isLoading: isFetchingBuyBondsV1,
-    refetch: refetchBuyBondsV1
   } = useReadContract({
     address: BUY_BOND_ADDRESS_V1,
     abi: BUY_BOND_ABI_V1,
     functionName: 'getUserActiveBonds',
     args: [address],
-    enabled: isConnected && !!address,
+    query: {
+      enabled: isConnected && !!address,
+    },
   });
 
   // Fetch user's active sell bonds (V2)
@@ -59,13 +61,14 @@ const ActiveBonds = () => {
     data: activeSellBondsData,
     error: fetchSellError,
     isLoading: isFetchingSellBonds,
-    refetch: refetchSellBonds
   } = useReadContract({
     address: SELL_BOND_ADDRESS_V2,
     abi: SELL_BOND_ABI_V2,
     functionName: 'getUserActiveBonds',
     args: [address],
-    enabled: isConnected && !!address,
+    query: {
+      enabled: isConnected && !!address,
+    },
   });
 
   // Fetch user's active sell bonds (V1)
@@ -73,13 +76,14 @@ const ActiveBonds = () => {
     data: activeSellBondsDataV1,
     error: fetchSellErrorV1,
     isLoading: isFetchingSellBondsV1,
-    refetch: refetchSellBondsV1
   } = useReadContract({
     address: SELL_BOND_ADDRESS_V1,
     abi: SELL_BOND_ABI_V1,
     functionName: 'getUserActiveBonds',
     args: [address],
-    enabled: isConnected && !!address,
+    query: {
+      enabled: isConnected && !!address,
+    },
   });
 
   // Use the custom hook for buy bond logic and actions (V2)

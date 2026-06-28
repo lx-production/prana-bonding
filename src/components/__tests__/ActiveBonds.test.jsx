@@ -3,21 +3,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ActiveBonds from '../ActiveBonds';
 
 const mocks = vi.hoisted(() => ({
-  useAccount: vi.fn(),
+  useConnection: vi.fn(),
   useReadContract: vi.fn(),
   useActiveBuyBonds: vi.fn(),
   useActiveSellBonds: vi.fn(),
 }));
 
 const {
-  useAccount: mockUseAccount,
+  useConnection: mockUseConnection,
   useReadContract: mockUseReadContract,
   useActiveBuyBonds: mockUseActiveBuyBonds,
   useActiveSellBonds: mockUseActiveSellBonds,
 } = mocks;
 
 vi.mock('wagmi', () => ({
-  useAccount: mocks.useAccount,
+  useConnection: mocks.useConnection,
   useReadContract: mocks.useReadContract,
 }));
 
@@ -62,7 +62,7 @@ const createSellHookResponse = (overrides = {}) => ({
 });
 
 beforeEach(() => {
-  mockUseAccount.mockReturnValue({
+  mockUseConnection.mockReturnValue({
     address: '0x123',
     isConnected: true,
   });
